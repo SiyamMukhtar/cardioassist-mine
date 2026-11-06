@@ -69,3 +69,16 @@ This version includes `api/index.js` and `vercel.json`: both the React UI and `/
 7. Any future push to `main` automatically triggers a new production deployment. Preview branches create preview deployments.
 
 **IMPORTANT:** Existing Neon `ca_` tables are reused; the backend only uses `CREATE TABLE IF NOT EXISTS` and indexes. MedGemma is not automatically hosted on Vercel. Do not use real patient data in this public prototype without production-grade security, identity checks and privacy review.
+
+## Vercel 404 registration fix (November 2026)
+
+This revision explicitly sends `/api/:path*` to one Node.js Function (`api/index.js`) instead of relying on the platform discovering a catch-all function. Express still receives its original `/api/...` route.
+
+1. Extract all files into your existing `cardioassist` folder. Keep `.git` and `.env` unchanged.
+2. Run `npm install`, `npm run build`, `git add .`, `git commit -m "Fix Vercel API routing"`, `git push origin main`.
+3. Ensure your Vercel project Root Directory is `./`, Framework Preset is Vite, and Production environment variables `DATABASE_URL` and `JWT_SECRET` are configured.
+4. Open `https://cardioassist.vercel.app/api/health` and confirm JSON is returned, then test registration.
+
+A 404 response means the function route is missing / not deployed, not that Neon credentials are wrong. If the health URL still gives 404, verify the new deployment commit and Vercel build output / Functions tab.
+
+The MedGemma endpoint is separate and not configured by this package.
