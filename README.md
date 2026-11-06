@@ -50,3 +50,22 @@ git push origin main
 
 ## Check connection
 `http://localhost:4000/api/health` returns JSON including `database` and `modelConfigured`. Avoid treating an unconfigured model as a successful AI deployment.
+
+
+## Vercel (live frontend + Neon backend)
+This version includes `api/index.js` and `vercel.json`: both the React UI and `/api` backend deploy on the same Vercel domain. No public database connection string is placed into the frontend.
+
+1. Extract ZIP into the existing local `cardioassist` folder (retain `.git` and your local `.env`).
+2. Run `npm install` and `npm run build`. Run `npm run dev:all` to test locally.
+3. In Vercel select **Add New > Project**, import `hamzawasiq79-lang/cardioassist`, set Framework Preset **Vite**, Root Directory `./`, Build Command `npm run build`, Output Directory `dist`.
+4. **Before deployment**, set **Project > Settings > Environment Variables** for **Production**:
+   - `DATABASE_URL` = your full original Neon URL, exactly as saved in your local `.env`
+   - `JWT_SECRET` = secure random string (32+ characters). You may choose a different one from local; existing browser sessions may need to log in again.
+   - `MEDGEMMA_MODEL` = `google/medgemma-27b-text-it`
+   - `MEDGEMMA_API_URL` and `MEDGEMMA_API_KEY` only if a real MedGemma server is available.
+   - `CLIENT_ORIGIN` is not necessary for same-origin calls on Vercel (the app's API is on the same domain).
+5. Push `main` with `git add . && git commit -m "Make CardioAssist Vercel ready" && git push origin main` and Vercel will deploy from GitHub.
+6. Open `https://YOUR-VERCEL-DOMAIN/api/health`; confirm `database: connected`. Then test login, patient creation, etc.
+7. Any future push to `main` automatically triggers a new production deployment. Preview branches create preview deployments.
+
+**IMPORTANT:** Existing Neon `ca_` tables are reused; the backend only uses `CREATE TABLE IF NOT EXISTS` and indexes. MedGemma is not automatically hosted on Vercel. Do not use real patient data in this public prototype without production-grade security, identity checks and privacy review.
