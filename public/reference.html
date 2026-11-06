@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CardioAssist — AI-Assisted Cardiac Clinical Platform</title>
+<style>
+:root{
+  --primary:#0b6f7b; --primary-dark:#085a63; --primary-light:#e6f3f5;
+  --accent:#e11d48; --accent-light:#ffe4e9;
+  --ink:#0f172a; --text:#1e293b; --muted:#64748b;
+  --bg:#f5f8fa; --card:#ffffff; --border:#e4ebf0;
+  --success:#059669; --success-bg:#ecfdf5;
+  --warn:#d97706; --warn-bg:#fffbeb;
+  --info:#2563eb; --info-bg:#eff6ff;
+  --danger:#dc2626; --danger-bg:#fef2f2;
+  --r:14px; --r-lg:20px;
+  --sh-sm:0 1px 2px rgba(15,23,42,.05);
+  --sh:0 4px 16px rgba(15,23,42,.06);
+  --sh-lg:0 20px 50px -12px rgba(15,23,42,.18);
+  --grad:linear-gradient(135deg,#0b6f7b 0%,#0e8a99 50%,#12a3b5 100%);
+  --font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:var(--font)}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.hidden{display:none!important}
+button{font-family:inherit}
+::selection{background:var(--primary-light);color:var(--primary-dark)}
+
+/* ==================== AUTH SPLIT SCREEN ==================== */
+.auth-wrap{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+.auth-hero{background:var(--grad);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:48px;color:#fff}
+.auth-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.14),transparent 45%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.1),transparent 40%)}
+.hero-top{position:relative;z-index:2;display:flex;align-items:center;gap:12px}
+.hero-logo{width:46px;height:46px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;backdrop-filter:blur(6px)}
+.hero-top h1{font-size:1.5rem;font-weight:800;letter-spacing:-.4px}
+.hero-top small{font-size:.72rem;opacity:.85;display:block;font-weight:400;letter-spacing:.5px;text-transform:uppercase}
+.hero-mid{position:relative;z-index:2;max-width:460px}
+.hero-mid h2{font-size:2.4rem;line-height:1.15;font-weight:800;letter-spacing:-1.2px;margin-bottom:18px}
+.hero-mid h2 span{background:linear-gradient(90deg,#fff,#a5f3fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-mid p{font-size:1rem;line-height:1.65;opacity:.92}
+.hero-features{position:relative;z-index:2;display:flex;flex-direction:column;gap:14px;margin-top:34px}
+.hero-feature{display:flex;align-items:flex-start;gap:12px;font-size:.88rem;opacity:.95}
+.hero-feature .tick{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.7rem;font-weight:700}
+.hero-bottom{position:relative;z-index:2;font-size:.72rem;opacity:.75;letter-spacing:.3px}
+.ecg-line{position:absolute;left:0;right:0;bottom:120px;height:70px;opacity:.22;z-index:1}
+.ecg-line svg{width:100%;height:100%}
+
+.auth-panel{display:flex;align-items:center;justify-content:center;padding:40px;background:#fff;overflow-y:auto}
+.auth-form{width:100%;max-width:420px}
+.auth-form .brand-sm{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.brand-icon-sm{width:38px;height:38px;background:var(--grad);border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.auth-form h2{font-size:1.5rem;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.auth-form .lead{color:var(--muted);font-size:.88rem;margin-bottom:24px;line-height:1.5}
+.tabs{display:flex;background:#f1f5f9;padding:4px;border-radius:11px;margin-bottom:22px}
+.tab{flex:1;padding:9px;border:none;background:none;border-radius:8px;font-weight:600;font-size:.83rem;color:var(--muted);cursor:pointer;transition:.2s}
+.tab.active{background:#fff;color:var(--primary);box-shadow:var(--sh-sm)}
+.field{margin-bottom:14px}
+label{display:block;font-size:.78rem;font-weight:600;margin-bottom:6px;color:#334155}
+input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:.9rem;outline:none;transition:.15s;background:#fff;font-family:inherit;color:var(--text)}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(11,111,123,.1)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{padding:12px 18px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;font-size:.9rem;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
+.btn:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:var(--sh)}
+.btn:active{transform:none}
+.btn-block{width:100%}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}
+.btn-outline:hover{background:var(--primary-light)}
+.btn-ghost{background:#f1f5f9;color:var(--text)}
+.btn-ghost:hover{background:#e2e8f0}
+.btn-danger{background:var(--danger)}
+.btn-sm{padding:8px 14px;font-size:.8rem}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:.75rem}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
+.alert{padding:11px 14px;border-radius:10px;font-size:.83rem;margin-bottom:14px;display:none;line-height:1.5}
+.alert.show{display:block}
+.alert-error{background:var(--danger-bg);color:var(--danger);border:1px solid #fecaca}
+.alert-info{background:var(--info-bg);color:var(--info);border:1px solid #bfdbfe}
+.demo-hint{background:#f8fafc;border:1px dashed var(--border);border-radius:10px;padding:11px 14px;font-size:.78rem;color:var(--muted);margin-top:18px}
+.demo-hint b{color:var(--primary)}
+@media(max-width:900px){.auth-wrap{grid-template-columns:1fr}.auth-hero{display:none}.auth-panel{padding:28px 20px}}
+
+/* ==================== APP SHELL ==================== */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:248px;background:var(--ink);color:#cbd5e1;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-brand{padding:22px 20px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #1e293b}
+.sb-brand .ic{width:40px;height:40px;background:var(--grad);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff}
+.sb-brand h1{font-size:1.05rem;color:#fff;font-weight:800;letter-spacing:-.3px}
+.sb-brand small{font-size:.64rem;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;cursor:pointer;font-size:.85rem;margin-bottom:2px;transition:.15s;color:#cbd5e1;position:relative}
+.nav-item:hover{background:#1e293b;color:#fff}
+.nav-item.active{background:var(--primary);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(11,111,123,.4)}
+.nav-item .ico{width:20px;text-align:center;font-size:.95rem}
+.nav-item .count{margin-left:auto;font-size:.66rem;background:rgba(255,255,255,.15);padding:2px 7px;border-radius:20px;font-weight:700}
+.nav-item.active .count{background:rgba(255,255,255,.25)}
+.sb-foot{padding:14px;border-top:1px solid #1e293b}
+.sb-user{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:#1e293b;margin-bottom:10px}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:.8rem;flex-shrink:0}
+.sb-user .nm{font-size:.8rem;color:#fff;font-weight:600;line-height:1.2}
+.sb-user .rl{font-size:.66rem;color:#94a3b8;text-transform:capitalize}
+.sb-logout{width:100%;padding:9px;background:transparent;border:1px solid #334155;color:#fca5a5;border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600;transition:.15s}
+.sb-logout:hover{background:#1e293b;border-color:#475569}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);background:rgba(255,255,255,.9)}
+.topbar h2{font-size:1.1rem;font-weight:800;letter-spacing:-.3px}
+.topbar .crumbs{font-size:.72rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.ai-badge{display:flex;align-items:center;gap:6px;font-size:.7rem;background:var(--primary-light);color:var(--primary);padding:5px 11px;border-radius:20px;font-weight:700;letter-spacing:.2px}
+.ai-badge .dot{width:6px;height:6px;background:var(--primary);border-radius:50%;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.icon-top{width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.95rem;position:relative;transition:.15s}
+.icon-top:hover{background:#f8fafc}
+.icon-top .badge-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--accent);border-radius:50%;border:2px solid #fff}
+
+.content{padding:26px 28px;flex:1;overflow-y:auto}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:14px;flex-wrap:wrap}
+.panel-head h3{font-size:1.05rem;font-weight:800;letter-spacing:-.3px}
+.panel-head p{font-size:.82rem;color:var(--muted);margin-top:3px;line-height:1.5}
+.panel-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ==================== CARDS / STATS ==================== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:.2s;position:relative;overflow:hidden}
+.stat:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.stat::after{content:"";position:absolute;right:-20px;top:-20px;width:70px;height:70px;background:var(--primary-light);border-radius:50%;opacity:.5}
+.stat .num{font-size:1.75rem;font-weight:800;color:var(--primary);letter-spacing:-.5px;line-height:1;position:relative}
+.stat .lbl{font-size:.74rem;color:var(--muted);margin-top:6px;font-weight:500;position:relative}
+.stat .trend{font-size:.68rem;color:var(--success);font-weight:700;margin-top:6px;position:relative}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:22px}
+.card-lg{border-radius:var(--r-lg)}
+.card h3{font-size:.95rem;font-weight:800;margin-bottom:6px;letter-spacing:-.2px}
+
+/* ==================== TABLES ==================== */
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{background:#f8fafc;text-align:left;padding:12px 15px;font-weight:700;color:#475569;border-bottom:1px solid var(--border);white-space:nowrap;font-size:.76rem;text-transform:uppercase;letter-spacing:.4px}
+td{padding:13px 15px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:.12s}
+tbody tr:hover td{background:#f8fafc}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;letter-spacing:.2px}
+.pill-green{background:var(--success-bg);color:var(--success)}
+.pill-blue{background:var(--info-bg);color:var(--info)}
+.pill-amber{background:var(--warn-bg);color:var(--warn)}
+.pill-red{background:var(--danger-bg);color:var(--danger)}
+.pill-gray{background:#f1f5f9;color:var(--muted)}
+.empty{padding:44px;text-align:center;color:var(--muted);font-size:.87rem}
+.empty .ico{font-size:2.2rem;margin-bottom:10px;opacity:.5}
+
+/* ==================== GUIDELINES / STUDIES / PLUGS ==================== */
+.plug-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.plug-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:.2s;display:flex;flex-direction:column}
+.plug-card:hover{box-shadow:var(--sh-lg);transform:translateY(-3px)}
+.plug-head{padding:22px 22px 16px;position:relative;overflow:hidden}
+.plug-head::before{content:"";position:absolute;inset:0;opacity:.08;background:var(--grad)}
+.plug-head .ic{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;position:relative;color:#fff;background:var(--grad)}
+.plug-head h4{font-size:1.05rem;font-weight:800;letter-spacing:-.3px;position:relative}
+.plug-head p{font-size:.8rem;color:var(--muted);margin-top:4px;line-height:1.5;position:relative}
+.plug-body{padding:0 22px 20px;flex:1}
+.plug-item{padding:12px 0;border-top:1px solid #f1f5f9;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:.15s}
+.plug-item:hover{padding-left:4px}
+.plug-item:first-child{border-top:none}
+.plug-item .tag{font-size:.62rem;font-weight:800;padding:3px 8px;border-radius:6px;flex-shrink:0;margin-top:2px;letter-spacing:.3px}
+.plug-item .body{flex:1;min-width:0}
+.plug-item .ttl{font-size:.83rem;font-weight:700;color:var(--ink);line-height:1.4}
+.plug-item .meta{font-size:.72rem;color:var(--muted);margin-top:3px}
+.plug-foot{padding:0 22px 22px}
+.plug-foot .btn{width:100%}
+
+/* ==================== PRODUCT LEAFLET ==================== */
+.leaflet-header{background:var(--primary-light);border:1px solid #b2e0e6;border-radius:var(--r);padding:14px 18px;margin-bottom:18px;display:flex;gap:14px;align-items:flex-start}
+.leaflet-header .lh-ic{width:38px;height:38px;border-radius:10px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.leaflet-header h4{font-size:.9rem;font-weight:800;color:var(--primary-dark);margin-bottom:3px}
+.leaflet-header p{font-size:.79rem;color:#155e63;line-height:1.5}
+.leaflet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.leaflet-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:.2s;display:flex;flex-direction:column}
+.leaflet-card:hover{box-shadow:var(--sh-lg);border-color:#cbd5e1}
+.leaflet-card .lc-head{padding:18px 20px 14px;border-bottom:1px solid #f1f5f9;background:linear-gradient(135deg,#f8fafc,#fff)}
+.leaflet-card .lc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.leaflet-card .lc-name{font-size:1rem;font-weight:800;color:var(--ink);letter-spacing:-.2px;line-height:1.25}
+.leaflet-card .lc-brand{font-size:.72rem;color:var(--muted);margin-top:2px}
+.leaflet-card .lc-body{padding:16px 20px;flex:1}
+.leaflet-sec{margin-bottom:13px}
+.leaflet-sec:last-child{margin-bottom:0}
+.leaflet-sec .ls-label{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.leaflet-sec .ls-label.ind{color:var(--primary)}
+.leaflet-sec .ls-label.dos{color:var(--info)}
+.leaflet-sec .ls-label.contra{color:var(--danger)}
+.leaflet-sec .ls-label.warn{color:var(--warn)}
+.leaflet-sec .ls-label.inter{color:#475569}
+.leaflet-sec .ls-label.preg{color:#7c3aed}
+.leaflet-sec .ls-text{font-size:.77rem;color:var(--text);line-height:1.55}
+.leaflet-card .lc-foot{padding:12px 20px;border-top:1px solid #f1f5f9;background:#fafbfc}
+.leaflet-card .lc-foot .btn{width:100%;font-size:.76rem;padding:8px}
+
+/* ==================== CONSULTATION ==================== */
+.consult-layout{display:grid;grid-template-columns:300px 1fr;gap:18px;height:calc(100vh - 160px)}
+.patient-list{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow-y:auto;display:flex;flex-direction:column}
+.patient-list-head{padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:2}
+.patient-list-head h4{font-size:.85rem;font-weight:800}
+.patient-list-head input{margin-top:10px;padding:8px 11px;font-size:.8rem;border-radius:8px}
+.patient-item{padding:14px 18px;border-bottom:1px solid #f8fafc;cursor:pointer;transition:.15s;position:relative}
+.patient-item:hover{background:#f8fafc}
+.patient-item.active{background:var(--primary-light)}
+.patient-item.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary)}
+.patient-item .pname{font-weight:700;font-size:.87rem;color:var(--ink);display:flex;align-items:center;gap:7px}
+.patient-item .pmeta{font-size:.73rem;color:var(--muted);margin-top:3px;line-height:1.4}
+.chat-panel{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;overflow:hidden}
+.chat-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.chat-head .who{display:flex;align-items:center;gap:11px}
+.chat-head .avatar-lg{width:38px;height:38px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem}
+.chat-head h4{font-size:.95rem;font-weight:800;letter-spacing:-.2px}
+.chat-head .sub{font-size:.74rem;color:var(--muted);margin-top:1px}
+.chat-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;background:#fbfdfe}
+.msg{max-width:84%;display:flex;gap:10px;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg .av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;flex-shrink:0}
+.msg.user .av{background:#cbd5e1;color:#475569}
+.msg.ai .av{background:var(--grad);color:#fff}
+.msg .bub{padding:12px 16px;border-radius:15px;font-size:.86rem;line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
+.msg.user .bub{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.msg.ai .bub{background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px;box-shadow:var(--sh-sm)}
+.msg .bub img{max-width:100%;border-radius:9px;margin-top:9px;border:1px solid var(--border);display:block}
+.chat-input-area{padding:14px 18px;border-top:1px solid var(--border);background:#fff}
+.file-chip{display:none;align-items:center;gap:10px;padding:9px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;font-size:.78rem;margin-bottom:10px}
+.file-chip.show{display:flex}
+.file-chip .rm{margin-left:auto;cursor:pointer;color:var(--danger);font-weight:800;padding:0 4px}
+.input-row{display:flex;gap:9px;align-items:center}
+.icon-btn{width:42px;height:42px;border-radius:10px;border:1.5px solid var(--border);background:#f8fafc;cursor:pointer;font-size:1.1rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+.icon-btn:hover{background:#e2e8f0;border-color:#cbd5e1}
+.input-row input{flex:1;padding:11px 13px}
+.send-btn{padding:0 22px;height:42px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;flex-shrink:0;font-size:.86rem;transition:.15s}
+.send-btn:hover{background:var(--primary-dark)}
+.send-btn:disabled{background:#94a3b8;cursor:not-allowed}
+.dots span{display:inline-block;width:6px;height:6px;background:var(--primary);border-radius:50%;margin-right:4px;animation:bounce 1.3s infinite ease-in-out both}
+.dots span:nth-child(2){animation-delay:-.16s}.dots span:nth-child(3){animation-delay:-.32s}
+@keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+.disclaimer-bar{font-size:.7rem;color:var(--muted);text-align:center;padding:7px 0 0;line-height:1.4}
+
+/* ==================== STEP FLOW ==================== */
+.steps{display:flex;gap:0;margin-bottom:24px;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:6px;overflow-x:auto}
+.step{flex:1;min-width:140px;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:11px;transition:.2s;cursor:pointer}
+.step:hover{background:#f8fafc}
+.step.active{background:var(--primary-light)}
+.step.done{opacity:.85}
+.step-num{width:26px;height:26px;border-radius:50%;background:#e2e8f0;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:800;flex-shrink:0;transition:.2s}
+.step.active .step-num{background:var(--primary);color:#fff}
+.step.done .step-num{background:var(--success);color:#fff}
+.step-info .ttl{font-size:.79rem;font-weight:700;line-height:1.2;color:var(--ink)}
+.step-info .sub{font-size:.68rem;color:var(--muted);margin-top:1px}
+.step-line{width:24px;height:2px;background:var(--border);flex-shrink:0;align-self:center}
+
+.guide-panel{background:linear-gradient(135deg,#f0fdfa,#e6f3f5);border:1px solid #b2e0e6;border-radius:var(--r-lg);padding:20px 22px;margin-bottom:20px;display:flex;gap:16px;align-items:flex-start}
+.guide-panel .gp-ic{width:42px;height:42px;border-radius:11px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.guide-panel h4{font-size:.9rem;font-weight:800;color:var(--primary-dark);margin-bottom:4px}
+.guide-panel p{font-size:.82rem;color:#155e63;line-height:1.55}
+.guide-panel .gp-dismiss{margin-left:auto;background:none;border:none;color:var(--primary);font-weight:700;font-size:.75rem;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0}
+.guide-panel .gp-dismiss:hover{background:rgba(11,111,123,.1)}
+
+/* ==================== MODAL ==================== */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:var(--r-lg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 70px rgba(0,0,0,.3);animation:slideUp .25s}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}
+.modal-head h3{font-size:1.05rem;font-weight:800;letter-spacing:-.3px}
+.modal-head .sub{font-size:.76rem;color:var(--muted);margin-top:2px}
+.modal-body{padding:24px}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:#fff}
+.close-x{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px;border-radius:6px}
+.close-x:hover{background:#f1f5f9;color:var(--text)}
+
+/* ==================== INFO TILES ==================== */
+.info-hero{background:var(--grad);color:#fff;padding:26px;border-radius:var(--r-lg);margin-bottom:18px;position:relative;overflow:hidden}
+.info-hero::before{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:rgba(255,255,255,.1);border-radius:50%}
+.info-hero .tag-line{font-size:.7rem;text-transform:uppercase;letter-spacing:1.2px;opacity:.85;font-weight:700;margin-bottom:6px}
+.info-hero h2{font-size:1.4rem;font-weight:800;letter-spacing:-.5px;line-height:1.25;position:relative}
+.info-hero p{margin-top:10px;font-size:.85rem;line-height:1.6;opacity:.93;position:relative;max-width:600px}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.info-tile{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.info-tile .it-ic{width:34px;height:34px;border-radius:9px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}
+.info-tile h5{font-size:.85rem;font-weight:800;margin-bottom:4px;color:var(--ink)}
+.info-tile p{font-size:.78rem;color:var(--muted);line-height:1.5}
+
+/* ==================== TOAST ==================== */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(140px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:11px;font-size:.85rem;z-index:999;transition:transform .35s cubic-bezier(.2,.9,.3,1.2);box-shadow:0 12px 30px rgba(0,0,0,.3);font-weight:500;max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ==================== RESPONSIVE ==================== */
+@media(max-width:960px){.consult-layout{grid-template-columns:1fr;height:auto}.patient-list{max-height:220px}.chat-panel{height:70vh}}
+@media(max-width:820px){.sidebar{position:fixed;left:-260px;top:0;bottom:0;z-index:50;transition:left .25s;box-shadow:var(--sh-lg)}.sidebar.open{left:0}.menu-btn{display:flex!important}.stats{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}}
+.menu-btn{display:none;width:36px;height:36px;border:1px solid var(--border);background:#fff;border-radius:9px;cursor:pointer;align-items:center;justify-content:center;font-size:1.1rem}
+.overlay-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:none}
+.overlay-bg.show{display:block}
+</style>
+<style id="cardioassist-modern-refresh">
+:root{--primary:#087f8c;--primary-dark:#06616b;--primary-light:#e5f5f6;--accent:#ef476f;--ink:#142b3b;--text:#263e50;--muted:#78909f;--bg:#f3f7fa;--card:#fff;--border:#e4edf2;--r:15px;--r-lg:22px;--sh-sm:0 2px 8px rgba(20,43,59,.035);--sh:0 8px 26px rgba(20,43,59,.055);--sh-lg:0 18px 48px rgba(20,43,59,.12);--grad:linear-gradient(135deg,#087f8c,#0ba7a9);}
+body{background:#f4f7fa;color:#233c4d;font-size:14px}button,input,textarea,select{font:inherit}button{transition:transform .15s ease,box-shadow .15s ease,background .15s ease}button:active{transform:translateY(1px)}
+.shell{min-height:100vh}.sidebar{width:254px;background:#102b3b;color:#d9e7ee;padding:22px 15px 16px;box-shadow:5px 0 28px rgba(13,35,49,.06)}.sb-brand{padding:8px 12px 26px;gap:12px}.sb-brand .ic{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#13b4b2,#087f8c);box-shadow:0 8px 18px rgba(9,166,169,.25);font-size:22px}.sb-brand h1{font-size:1.12rem;letter-spacing:-.3px;color:#fff}.sb-brand small{font-size:.66rem;color:#8eb0bf;letter-spacing:1.3px}.nav{gap:5px}.nav-item,.nav button{border-radius:10px!important;margin:2px 0;padding:12px 13px!important;color:#a9c1cc!important;font-weight:500!important;transition:all .2s}.nav-item:hover,.nav button:hover{background:#1b3b4d!important;color:#fff!important}.nav-item.active,.nav button.active{background:linear-gradient(90deg,rgba(15,174,174,.2),rgba(15,174,174,.08))!important;color:#5ee3df!important;box-shadow:inset 3px 0 #28c5c0}.sb-foot{border-top:1px solid rgba(255,255,255,.09);padding:16px 9px 4px}.sb-user{gap:10px}.sb-avatar{background:#1d5362!important;color:#a4f2eb!important;border:1px solid #2a6674}.sb-user .nm{color:#fff}.sb-user .rl{color:#8daab8}.sb-logout{color:#9bb5c1!important;border-radius:9px!important}.sb-logout:hover{background:#1b3b4d!important;color:#fff!important}
+.main{min-width:0}.topbar{height:82px;background:rgba(255,255,255,.92);border-bottom:1px solid #e7eef2;padding:0 34px;backdrop-filter:blur(12px);position:sticky;top:0;z-index:20}.topbar h2{font-size:1.22rem;color:#183346;letter-spacing:-.4px;font-weight:750}.crumbs{font-size:.75rem;color:#8a9eaa;margin-top:4px}.topbar-right{gap:12px}.ai-badge{background:#eaf8f7;color:#087f8c;border:1px solid #d5f0ee;border-radius:100px;padding:8px 13px;font-size:.75rem;font-weight:650}.ai-badge .dot{box-shadow:0 0 0 4px #d8f2f0}.icon-top{border:1px solid #e8eef2;background:#fff;border-radius:11px;width:38px;height:38px;box-shadow:var(--sh-sm)}.content{padding:28px 34px 40px;max-width:1600px;margin:0 auto}
+.card,.panel,.modal,.guide-panel{border:1px solid #e6edf1!important;border-radius:17px!important;box-shadow:var(--sh-sm)!important;background:#fff}.card{padding:22px}.card h3,.panel-head h3{font-size:1rem;color:#183346;font-weight:750;letter-spacing:-.25px}.card p,.panel-head p{color:#8195a2}.btn{border-radius:10px!important;font-weight:650!important;padding:10px 15px!important;box-shadow:none!important}.btn-primary,.btn:not(.btn-outline):not(.btn-ghost):not(.btn-white){background:#087f8c!important;color:white!important;border:1px solid #087f8c!important}.btn:hover{box-shadow:0 5px 14px rgba(8,127,140,.15)!important}.btn-outline{border:1px solid #d9e6ec!important;background:#fff!important;color:#355367!important}.btn-ghost{color:#5b7382!important}.field input,.field select,.field textarea,input,select,textarea{border:1px solid #dce7ed;border-radius:10px;background:#fbfdfe;padding:11px 12px;outline:none;transition:border .15s,box-shadow .15s}.field input:focus,.field select:focus,.field textarea:focus,input:focus,select:focus,textarea:focus{border-color:#0b9aa0;box-shadow:0 0 0 3px rgba(11,154,160,.1)}
+.dash-welcome{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;min-height:210px;padding:30px 34px;border-radius:22px;background:linear-gradient(112deg,#10394b 0%,#0c6370 58%,#0b9b9c 100%);color:#fff;margin-bottom:27px;box-shadow:0 12px 30px rgba(12,88,103,.16)}.dash-welcome:after{content:"";position:absolute;width:380px;height:380px;border:1px solid rgba(255,255,255,.1);border-radius:50%;right:3%;top:-150px;box-shadow:0 0 0 36px rgba(255,255,255,.035),0 0 0 75px rgba(255,255,255,.025)}.welcome-copy{position:relative;z-index:2}.eyebrow{font-size:.68rem;letter-spacing:1.7px;font-weight:750;color:#a6ece9;margin-bottom:15px;display:flex;align-items:center;gap:8px}.pulse-dot{width:7px;height:7px;border-radius:50%;background:#62e2d9;box-shadow:0 0 0 4px rgba(98,226,217,.15)}.dash-welcome h1{font-size:2rem;font-weight:800;letter-spacing:-.8px;margin:0 0 8px}.dash-welcome p{font-size:.88rem;color:#c3e1e6;margin:0;line-height:1.6}.wave{color:#ffd166}.welcome-actions{display:flex;gap:10px;margin-top:22px}.welcome-actions .btn-primary{background:#13b4b2!important;border-color:#13b4b2!important}.btn-white{background:#fff!important;color:#164b5b!important;border:1px solid #fff!important}.welcome-art{width:310px;min-width:220px;height:150px;position:relative;z-index:1;opacity:.95}.heart-ring{position:absolute;right:68px;top:3px;width:106px;height:106px;border:1px solid rgba(157,246,239,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 15px rgba(255,255,255,.035),0 0 0 30px rgba(255,255,255,.025)}.heart-ring span{font-size:42px;color:#a3f5ec;text-shadow:0 0 20px rgba(124,255,242,.4)}.ecg-line{position:absolute;right:0;bottom:25px;width:100%;height:48px}.ecg-line svg{width:100%;height:100%;overflow:visible}.ecg-line path{fill:none;stroke:#91eee7;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(145,238,231,.35))}.welcome-note{position:absolute;right:0;bottom:-1px;font-size:.65rem;color:#c6e7e8;text-align:right;line-height:1.4}.welcome-note b{font-size:.75rem;color:#fff}
+.dash-section-heading{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px}.dash-section-heading h2{font-size:1.1rem;font-weight:800;color:#173448}.dash-section-heading p{font-size:.78rem;margin-top:3px;color:#8195a2}.period-chip{border:1px solid #e2ebef;background:#fff;border-radius:9px;padding:8px 12px;color:#597181;font-size:.75rem}.period-chip span{margin-left:12px;color:#9aaab4}.modern-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}.modern-stat{padding:19px 20px!important;min-height:160px;border-radius:16px!important;transition:transform .2s,box-shadow .2s}.modern-stat:hover{transform:translateY(-3px);box-shadow:var(--sh)!important}.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}.stat-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:1.15rem}.patients-icon{background:#e7f7f5;color:#078e8c}.consult-icon{background:#eaf2ff;color:#4279d8}.ai-icon{background:#f1eaff;color:#8b5bd6}.doctor-icon{background:#eaf7ee;color:#29965c}.stat-caption{font-size:.62rem;letter-spacing:1px;color:#94a6b1;font-weight:750}.modern-stat .num{font-size:1.85rem;font-weight:800;line-height:1.1;color:#173448;letter-spacing:-.8px}.modern-stat .lbl{font-size:.79rem;color:#607988;margin-top:5px}.stat-foot{display:flex;align-items:center;gap:6px;font-size:.68rem;color:#8b9eaa;margin-top:13px}.stat-foot-dot{width:6px;height:6px;background:#13aaa1;border-radius:50%}.stat-foot-dot.blue{background:#5485df}.stat-foot-dot.violet{background:#a17be4}.stat-foot-dot.green{background:#39a96e}.dash-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px;margin-bottom:25px}.card-heading{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:17px}.card-heading p{font-size:.76rem;margin-top:5px}.heading-mark{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:#eef8f8;color:#0b9196}.quick-actions{display:grid;gap:9px}.quick-action{display:flex;align-items:center;gap:12px;width:100%;border:1px solid #e8eef2;background:#fff;border-radius:12px;padding:12px;text-align:left;cursor:pointer}.quick-action:hover{border-color:#b8e2e1;background:#f9fdfd;transform:translateX(2px)}.qa-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;font-size:1.1rem;flex-shrink:0}.qa-teal{background:#e8f7f6;color:#0b9895}.qa-blue{background:#edf3ff;color:#4d7dde}.qa-purple{background:#f3edff;color:#9067d6}.quick-action span:nth-child(2){flex:1;min-width:0}.quick-action b{display:block;font-size:.81rem;color:#294658}.quick-action small{display:block;color:#8b9da8;font-size:.7rem;margin-top:3px}.quick-action i{font-style:normal;color:#9ab0bb;font-size:1rem}.workflow-steps{display:grid;gap:13px}.workflow-step{display:flex;align-items:flex-start;gap:12px}.step-number{width:27px;height:27px;border-radius:9px;background:#e9f6f6;color:#0b8d93;display:grid;place-items:center;font-size:.75rem;font-weight:800;flex-shrink:0}.workflow-step b{display:block;color:#294658;font-size:.8rem}.workflow-step small{display:block;color:#8a9eaa;font-size:.71rem;margin-top:3px;line-height:1.45}.clinical-note{display:flex;gap:9px;align-items:flex-start;background:#f4f9fc;border:1px solid #e6f0f5;border-radius:10px;padding:10px 12px;margin-top:16px;color:#5e7d8e}.clinical-note span{color:#4289b4}.clinical-note p{font-size:.69rem;line-height:1.45;margin:0}.recent-section{margin-top:4px}.recent-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.recent-heading p{font-size:.76rem;margin-top:4px}.recent-heading .btn{font-size:.73rem}.panel-head{margin:20px 0 12px}table{border-collapse:separate!important;border-spacing:0!important;width:100%;overflow:hidden;border:1px solid #e6edf1;border-radius:13px;background:#fff}thead th{background:#f7fafb!important;color:#8195a2!important;text-transform:uppercase;letter-spacing:.65px;font-size:.65rem!important;font-weight:750!important;padding:13px 15px!important;border-bottom:1px solid #e7eef2!important}tbody td{padding:13px 15px!important;border-bottom:1px solid #edf2f5!important;color:#425c6d;font-size:.77rem!important}tbody tr:last-child td{border-bottom:0!important}tbody tr:hover{background:#f9fcfd}.guide-panel{background:#f1fbfa!important;border-color:#d6f0ee!important;padding:15px 18px!important}.guide-panel h4{color:#1c5963}.guide-panel p{color:#577a83}.guide-panel .gp-ic{background:#d8f4f0;color:#0b9296;border-radius:10px}
+/* Shared app sections */
+.page-head,.section-head{margin-bottom:20px}.table-wrap{border-radius:14px;overflow-x:auto}.badge,.pill,.status{border-radius:100px!important}.modal{box-shadow:0 24px 70px rgba(16,43,59,.2)!important}.overlay-bg{backdrop-filter:blur(2px)}
+@media(max-width:1200px){.content{padding:24px}.modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.welcome-art{width:240px}.dash-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.topbar{padding:0 20px}.content{padding:20px}.dash-grid{grid-template-columns:1fr}.welcome-art{opacity:.5;position:absolute;right:10px}.dash-welcome{padding:26px}.dash-welcome h1{font-size:1.7rem}}
+@media(max-width:600px){.content{padding:14px}.topbar{height:72px;padding:0 14px}.topbar h2{font-size:1.05rem}.ai-badge{display:none}.dash-welcome{min-height:220px;padding:22px 19px;border-radius:17px}.dash-welcome h1{font-size:1.45rem;max-width:250px}.dash-welcome p{max-width:260px;font-size:.78rem}.welcome-art{right:-75px;opacity:.25}.welcome-actions{flex-wrap:wrap}.modern-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.modern-stat{padding:14px!important;min-height:145px}.modern-stat .num{font-size:1.55rem}.stat-caption{font-size:.55rem}.stat-icon{width:32px;height:32px}.dash-section-heading{margin-bottom:11px}.period-chip{font-size:.68rem}.card{padding:16px}.recent-heading{align-items:flex-start;gap:8px}.recent-heading .btn{white-space:nowrap;padding:8px 9px!important}.recent-heading h3{font-size:.9rem}.recent-heading p{font-size:.68rem}table{min-width:560px}.nav-item,.nav button{padding:11px!important}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div class="overlay-bg" id="overlayBg" onclick="closeSidebar()"></div>
+
+<!-- ==================== AUTH ==================== -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-hero">
+    <div class="hero-top">
+      <div class="hero-logo">❤</div>
+      <div>
+        <h1>CardioAssist</h1>
+        <small>AI-Assisted Cardiac Platform</small>
+      </div>
+    </div>
+
+    <div class="hero-mid">
+      <h2>Read cardiac reports <span>faster</span>, safer, and with clinical context.</h2>
+      <p>An AI-assisted clinical workspace built around cardiac principles — upload ECGs, echocardiograms and labs, get structured findings, and keep every decision in the hands of the clinician.</p>
+
+      <div class="hero-features">
+        <div class="hero-feature"><span class="tick">✓</span><span>Structured AI interpretation of ECG, echo and lipid reports</span></div>
+        <div class="hero-feature"><span class="tick">✓</span><span>Guideline-aware summaries aligned to ESC / ACC / AHA concepts</span></div>
+        <div class="hero-feature"><span class="tick">✓</span><span>Full audit trail with CSV / Excel export for governance</span></div>
+      </div>
+    </div>
+
+    <div class="hero-bottom">For licensed clinicians · AI output is advisory, not diagnostic</div>
+
+    <div class="ecg-line">
+      <svg viewBox="0 0 1200 80" preserveAspectRatio="none">
+        <polyline fill="none" stroke="#a5f3fc" stroke-width="2"
+          points="0,40 60,40 70,40 80,20 90,60 100,40 180,40 190,40 200,10 210,70 220,40 340,40 350,40 360,25 370,55 380,40 520,40 530,40 540,15 550,65 560,40 700,40 710,40 720,22 730,58 740,40 900,40 910,40 920,12 930,68 940,40 1200,40"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="auth-panel">
+    <div class="auth-form">
+      <div class="brand-sm">
+        <div class="brand-icon-sm">❤</div>
+        <div>
+          <div style="font-weight:800;font-size:.9rem;color:var(--primary)">CardioAssist</div>
+          <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Clinician Portal</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="tabLogin">Sign In</button>
+        <button class="tab" id="tabSignup">Doctor Sign Up</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="loginView">
+        <h2>Welcome back</h2>
+        <p class="lead">Sign in to access your patient panel, consultations and AI-assisted reports.</p>
+        <div class="alert alert-error" id="loginError"></div>
+        <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="doctor@hospital.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+        <button class="btn btn-block" id="loginBtn">Sign In</button>
+        <div class="demo-hint">Demo admin · <b>admin@cardio.com</b> / <b>admin123</b></div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="signupView" class="hidden">
+        <h2>Create a clinician account</h2>
+        <p class="lead">Register to enrol patients and run AI-assisted cardiac consultations.</p>
+        <div class="alert alert-error" id="signupError"></div>
+        <div class="field"><label>Full Name</label><input id="suName" placeholder="Dr. Jane Smith"></div>
+        <div class="row2">
+          <div class="field"><label>Email</label><input type="email" id="suEmail" placeholder="jane@hospital.com"></div>
+          <div class="field"><label>Specialty</label>
+            <select id="suSpecialty">
+              <option>Cardiology</option><option>Internal Medicine</option>
+              <option>General Practice</option><option>Emergency Medicine</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>License No.</label><input id="suLicense" placeholder="MED-12345"></div>
+          <div class="field"><label>Hospital / Clinic</label><input id="suHospital" placeholder="City Heart Centre"></div>
+        </div>
+        <div class="field"><label>Password</label><input type="password" id="suPassword" placeholder="Min. 6 characters"></div>
+        <button class="btn btn-block" id="signupBtn">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== APP SHELL ==================== -->
+<div id="appShell" class="shell hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="ic">❤</div>
+      <div>
+        <h1>CardioAssist</h1>
+        <small>AI-Assisted</small>
+      </div>
+    </div>
+    <nav class="nav" id="navMenu"></nav>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sbAvatar">—</div>
+        <div>
+          <div class="nm" id="sbName">—</div>
+          <div class="rl" id="sbRole">—</div>
+        </div>
+      </div>
+      <button class="sb-logout" id="logoutBtn">Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div>
+          <h2 id="pageTitle">Dashboard</h2>
+          <div class="crumbs" id="pageCrumbs">Overview</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="ai-badge"><span class="dot"></span> AI-Assisted</div>
+        <button class="icon-top" title="Notifications">🔔<span class="badge-dot"></span></button>
+        <button class="icon-top" title="Help">?</button>
+      </div>
+    </div>
+    <div class="content" id="contentArea"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   STORAGE LAYER
+   ===================================================================== */
+const DB = {
+  key:'cardioassist_v3',
+  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || this.seed(); }catch(e){ return this.seed(); } },
+  save(d){ localStorage.setItem(this.key, JSON.stringify(d)); },
+  seed(){
+    const d = {
+      users:[{
+        id:'u_admin', name:'System Administrator', email:'admin@cardio.com',
+        password:'admin123', role:'admin', specialty:'—', license:'—',
+        hospital:'CardioAssist', createdAt:new Date().toISOString()
+      }],
+      patients:[], consultations:[]
+    };
+    this.save(d); return d;
+  }
+};
+let db = DB.load();
+const persist = () => DB.save(db);
+const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const now = () => new Date().toISOString();
+let session = null;
+
+/* =====================================================================
+   UTILITIES
+   ===================================================================== */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function showError(el, msg){ el.textContent = msg; el.classList.add('show'); }
+function hideError(el){ el.classList.remove('show'); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDateTime(iso){ return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('').toUpperCase(); }
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlayBg').classList.toggle('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlayBg').classList.remove('show'); }
+
+/* =====================================================================
+   AUTH
+   ===================================================================== */
+document.getElementById('tabLogin').onclick = () => switchTab('login');
+document.getElementById('tabSignup').onclick = () => switchTab('signup');
+function switchTab(t){
+  document.getElementById('tabLogin').classList.toggle('active', t==='login');
+  document.getElementById('tabSignup').classList.toggle('active', t==='signup');
+  document.getElementById('loginView').classList.toggle('hidden', t!=='login');
+  document.getElementById('signupView').classList.toggle('hidden', t!=='signup');
+}
+
+document.getElementById('loginBtn').onclick = () => {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError'); hideError(err);
+  const user = db.users.find(u => u.email.toLowerCase()===email && u.password===pass);
+  if(!user) return showError(err,'Invalid email or password.');
+  session = user; enterApp();
+};
+
+document.getElementById('signupBtn').onclick = () => {
+  const err = document.getElementById('signupError'); hideError(err);
+  const name = suName.value.trim(), email = suEmail.value.trim().toLowerCase();
+  const pass = suPassword.value;
+  if(!name || !email || !pass) return showError(err,'Name, email and password are required.');
+  if(pass.length < 6) return showError(err,'Password must be at least 6 characters.');
+  if(db.users.some(u => u.email.toLowerCase()===email)) return showError(err,'This email is already registered.');
+  const user = {
+    id: uid('u'), name, email, password: pass, role:'doctor',
+    specialty: suSpecialty.value, license: suLicense.value.trim()||'—',
+    hospital: suHospital.value.trim()||'—', createdAt: now()
+  };
+  db.users.push(user); persist();
+  session = user;
+  toast('Welcome, ' + name.split(' ')[0] + '!');
+  enterApp();
+};
+
+document.getElementById('logoutBtn').onclick = () => {
+  session = null;
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('loginPassword').value = '';
+};
+
+/* =====================================================================
+   NAV
+   ===================================================================== */
+const PAGES = {
+  doctor:[
+    {id:'dashboard', icon:'▦', label:'Dashboard'},
+    {id:'patients',  icon:'👤', label:'Patients'},
+    {id:'consult',   icon:'💬', label:'Consultation'},
+    {id:'guidelines',icon:'📘', label:'Guidelines'},
+    {id:'studies',   icon:'🔬', label:'Studies'},
+    {id:'leaflets',  icon:'💊', label:'Drug Leaflets'},
+    {id:'reports',   icon:'📄', label:'Reports'}
+  ],
+  admin:[
+    {id:'dashboard', icon:'▦', label:'Dashboard'},
+    {id:'users',     icon:'👥', label:'Users'},
+    {id:'patients',  icon:'👤', label:'All Patients'},
+    {id:'consult',   icon:'💬', label:'Consultation'},
+    {id:'guidelines',icon:'📘', label:'Guidelines'},
+    {id:'studies',   icon:'🔬', label:'Studies'},
+    {id:'leaflets',  icon:'💊', label:'Drug Leaflets'},
+    {id:'reports',   icon:'📄', label:'All Reports'},
+    {id:'admin',     icon:'⚙', label:'Admin Panel'}
+  ]
+};
+let currentPage = 'dashboard';
+let activePatientId = null;
+
+function enterApp(){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  document.getElementById('sbName').textContent = session.name;
+  document.getElementById('sbRole').textContent = session.role + (session.specialty && session.specialty!=='—' ? ' · '+session.specialty : '');
+  document.getElementById('sbAvatar').textContent = initials(session.name);
+  showPage('dashboard');
+}
+
+function buildNav(){
+  const nav = document.getElementById('navMenu');
+  nav.innerHTML = '';
+  PAGES[session.role].forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'nav-item' + (p.id===currentPage?' active':'');
+    const count = p.id==='patients' ? myPatients().length
+                : p.id==='reports' ? myConsultations().length
+                : p.id==='users' ? db.users.filter(u=>u.role==='doctor').length
+                : p.id==='leaflets' ? PRODUCT_LEAFLETS.length : '';
+    el.innerHTML = `<span class="ico">${p.icon}</span><span>${p.label}</span>${count?`<span class="count">${count}</span>`:''}`;
+    el.onclick = () => { showPage(p.id); if(window.innerWidth<=820) closeSidebar(); };
+    nav.appendChild(el);
+  });
+}
+
+const pageMeta = {
+  dashboard:{t:'Dashboard', c:'Overview'},
+  patients:{t:'Patients', c:'Enrolment & registry'},
+  consult:{t:'Consultation', c:'AI-assisted cardiac review'},
+  guidelines:{t:'Clinical Guidelines', c:'Reference library'},
+  studies:{t:'Clinical Studies', c:'Evidence base'},
+  leaflets:{t:'Drug Leaflets', c:'SmPC / FDA product information'},
+  reports:{t:'Reports', c:'Export & audit'},
+  users:{t:'User Management', c:'Doctors'},
+  admin:{t:'Admin Panel', c:'Data & governance'}
+};
+
+function showPage(page){
+  currentPage = page;
+  buildNav();
+  const meta = pageMeta[page] || {t:page, c:''};
+  document.getElementById('pageTitle').textContent = meta.t;
+  document.getElementById('pageCrumbs').textContent = meta.c;
+  const c = document.getElementById('contentArea');
+  c.innerHTML = '';
+  const fns = {
+    dashboard: renderDashboard, patients: renderPatients, consult: renderConsult,
+    guidelines: renderGuidelines, studies: renderStudies, leaflets: renderLeaflets,
+    reports: renderReports, users: renderUsers, admin: renderAdmin
+  };
+  (fns[page] || renderDashboard)(c);
+  c.scrollTop = 0;
+}
+
+const myPatients = () => session.role==='admin' ? db.patients : db.patients.filter(p=>p.doctorId===session.id);
+const myConsultations = () => session.role==='admin' ? db.consultations : db.consultations.filter(c=>c.doctorId===session.id);
+function docName(id){ const u = db.users.find(x=>x.id===id); return u ? u.name : '—'; }
+
+/* =====================================================================
+   DASHBOARD
+   ===================================================================== */
+function renderDashboard(c){
+  const pts = myPatients(), cons = myConsultations();
+  const aiCount = cons.filter(x=>x.aiUsed).length;
+  const today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const first = esc(session.name.split(' ')[0]);
+  c.innerHTML = `
+    <section class="dash-welcome">
+      <div class="welcome-copy"><div class="eyebrow"><span class="pulse-dot"></span> CARDIOASSIST WORKSPACE</div>
+        <h1>Good day, Dr. ${first} <span class="wave">✦</span></h1>
+        <p>Your clinical overview is ready. ${today} · Keep your patient care moving.</p>
+        <div class="welcome-actions"><button class="btn btn-primary" onclick="showPage('consult')"><span>＋</span> New consultation</button><button class="btn btn-white" onclick="showPage('patients')">＋ Add patient</button></div>
+      </div>
+      <div class="welcome-art"><div class="heart-ring"><span>♥</span></div><div class="ecg-line"><svg viewBox="0 0 260 64" preserveAspectRatio="none"><path d="M0 32 H48 L62 32 L76 10 L91 54 L108 20 L121 32 H158 L172 32 L186 7 L201 56 L217 28 L230 32 H260"/></svg></div><div class="welcome-note">Clinical intelligence<br/><b>with a human touch</b></div></div>
+    </section>
+    <div class="dash-section-heading"><div><h2>Overview</h2><p>Your practice at a glance</p></div><span class="period-chip">All time <span>⌄</span></span></div>
+    <div class="stats modern-stats">
+      <div class="stat modern-stat"><div class="stat-top"><span class="stat-icon patients-icon">♙</span><span class="stat-caption">PATIENTS</span></div><div class="num">${pts.length}</div><div class="lbl">Enrolled patients</div><div class="stat-foot"><span class="stat-foot-dot"></span> In your registry</div></div>
+      <div class="stat modern-stat"><div class="stat-top"><span class="stat-icon consult-icon">▤</span><span class="stat-caption">CONSULTATIONS</span></div><div class="num">${cons.length}</div><div class="lbl">Total consultations</div><div class="stat-foot"><span class="stat-foot-dot blue"></span> Documented sessions</div></div>
+      <div class="stat modern-stat"><div class="stat-top"><span class="stat-icon ai-icon">✧</span><span class="stat-caption">AI ASSISTED</span></div><div class="num">${aiCount}</div><div class="lbl">AI-assisted sessions</div><div class="stat-foot"><span class="stat-foot-dot violet"></span> Clinical decision support</div></div>
+      <div class="stat modern-stat"><div class="stat-top"><span class="stat-icon doctor-icon">♧</span><span class="stat-caption">CARE TEAM</span></div><div class="num">${db.users.filter(u=>u.role==='doctor').length}</div><div class="lbl">Registered doctors</div><div class="stat-foot"><span class="stat-foot-dot green"></span> Platform clinicians</div></div>
+    </div>
+    <div class="dash-grid">
+      <section class="card quick-card"><div class="card-heading"><div><h3>Quick actions</h3><p>Jump into your workflow</p></div><span class="heading-mark">↗</span></div>
+        <div class="quick-actions"><button class="quick-action" onclick="showPage('patients')"><span class="qa-icon qa-teal">♙</span><span><b>Register a patient</b><small>Create a new patient profile</small></span><i>→</i></button><button class="quick-action" onclick="showPage('consult')"><span class="qa-icon qa-blue">✚</span><span><b>Start consultation</b><small>Review symptoms and reports</small></span><i>→</i></button><button class="quick-action" onclick="showPage('reports')"><span class="qa-icon qa-purple">▧</span><span><b>View reports</b><small>Explore clinical summaries</small></span><i>→</i></button></div>
+      </section>
+      <section class="card workflow-card"><div class="card-heading"><div><h3>Getting started</h3><p>A simple path through CardioAssist</p></div><span class="heading-mark">✦</span></div>
+        <div class="workflow-steps"><div class="workflow-step"><span class="step-number">1</span><div><b>Choose a patient</b><small>Select an existing record or add a new one.</small></div></div><div class="workflow-step"><span class="step-number">2</span><div><b>Start a consultation</b><small>Add clinical notes or upload a cardiac report.</small></div></div><div class="workflow-step"><span class="step-number">3</span><div><b>Review AI insights</b><small>Verify every finding before clinical use.</small></div></div></div>
+        <div class="clinical-note"><span>ⓘ</span><p>AI output is advisory only and must be reviewed by a qualified clinician.</p></div>
+      </section>
+    </div>
+    <section class="recent-section"><div class="panel-head recent-heading"><div><h3>Recent consultations</h3><p>Your latest patient activity</p></div><button class="btn btn-outline btn-sm" onclick="showPage('reports')">View all reports <span>→</span></button></div>${consTable(cons.slice().reverse().slice(0,6), false)}</section>
+  `;
+}
+function dismissGuide(id){ const el = document.getElementById(id); if(el) el.style.display='none'; }
+
+/* =====================================================================
+   PATIENTS
+   ===================================================================== */
+function renderPatients(c){
+  const pts = myPatients();
+  c.innerHTML = `
+    <div class="guide-panel">
+      <div class="gp-ic">👤</div>
+      <div>
+        <h4>Step 1 — Patient enrolment</h4>
+        <p>Enrol a patient to start a consultation. Fields marked * are required. The patient ID (PT-xxxx) is auto-generated and used across consultations and exports.</p>
+      </div>
+    </div>
+
+    <div class="panel-head">
+      <div>
+        <h3>${session.role==='admin'?'All Patients':'My Patients'}</h3>
+        <p>${pts.length} patient${pts.length===1?'':'s'} in registry</p>
+      </div>
+      <button class="btn" onclick="openPatientModal()">+ Enrol New Patient</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Patient ID</th><th>Name</th><th>Age / Sex</th><th>Phone</th>
+          <th>Conditions</th><th>Enrolled</th><th>Doctor</th><th></th>
+        </tr></thead>
+        <tbody>
+        ${pts.length ? pts.map(p=>`
+          <tr>
+            <td><span class="pill pill-blue">${p.code}</span></td>
+            <td><b>${esc(p.name)}</b></td>
+            <td>${p.age} / ${p.sex}</td>
+            <td>${esc(p.phone||'—')}</td>
+            <td>${esc(p.conditions||'—')}</td>
+            <td>${fmtDate(p.createdAt)}</td>
+            <td>${esc(docName(p.doctorId))}</td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-sm btn-outline" onclick="startConsultFor('${p.id}')">Consult →</button>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="8" class="empty"><div class="ico">👤</div>No patients enrolled yet.<br><br><button class="btn btn-sm" onclick="openPatientModal()">Enrol your first patient</button></td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function openPatientModal(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-head">
+        <div><h3>Enrol New Patient</h3><div class="sub">Step 1 of the consultation workflow</div></div>
+        <button class="close-x">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-error" id="pmErr"></div>
+        <div class="field"><label>Full Name *</label><input id="pmName" placeholder="John Doe"></div>
+        <div class="row2">
+          <div class="field"><label>Age *</label><input id="pmAge" type="number" min="0" max="120" placeholder="54"></div>
+          <div class="field"><label>Sex *</label>
+            <select id="pmSex"><option>Male</option><option>Female</option><option>Other</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Phone</label><input id="pmPhone" placeholder="+92 300 1234567"></div>
+          <div class="field"><label>Blood Group</label>
+            <select id="pmBlood"><option>—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Known Cardiac Conditions / Notes</label>
+          <textarea id="pmCond" rows="2" placeholder="e.g. Hypertension, prior MI 2021, on statin"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost btn-sm" id="pmCancel">Cancel</button>
+        <button class="btn btn-sm" id="pmSave">Save Patient</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('.close-x').onclick = close;
+  document.getElementById('pmCancel').onclick = close;
+  overlay.onclick = e => { if(e.target===overlay) close(); };
+  document.getElementById('pmSave').onclick = () => {
+    const err = document.getElementById('pmErr'); hideError(err);
+    const name = pmName.value.trim(), age = parseInt(pmAge.value,10);
+    if(!name) return showError(err,'Patient name is required.');
+    if(!age || age<0 || age>120) return showError(err,'Please enter a valid age (0–120).');
+    const count = db.patients.length + 1;
+    db.patients.push({
+      id: uid('p'), code: 'PT-'+String(count).padStart(4,'0'),
+      name, age, sex: pmSex.value, phone: pmPhone.value.trim(),
+      blood: pmBlood.value, conditions: pmCond.value.trim(),
+      doctorId: session.id, createdAt: now()
+    });
+    persist(); close(); toast('Patient enrolled: '+name);
+    showPage('patients');
+  };
+}
+function startConsultFor(id){ activePatientId = id; showPage('consult'); }
+
+/* =====================================================================
+   CONSULTATION + AI
+   ===================================================================== */
+const AI_URL = 'http://localhost:11434/api/chat';
+const MODEL_NAME = 'gemma4';
+const SYSTEM_PROMPT = `You are CardioAssist, a cardiology-focused clinical decision-support AI.
+The clinician uploads a cardiac report image (ECG, echocardiogram, Holter, lipid panel, cardiac enzymes, etc.).
+Your job:
+1. Extract all visible cardiac-relevant measurements (e.g. EF, LV dimensions, ST-T changes, heart rate, LDL/HDL, troponin).
+2. Explain each finding in clear, plain clinical language.
+3. Flag abnormal values and state the likely clinical significance WITHOUT giving a definitive diagnosis.
+4. Never prescribe or adjust medication. Always state that a qualified physician must confirm.
+Respond in English. Be concise and structured.`;
+
+let chatState = { patientId:null, messages:[] };
+let pendingFile = null, pendingB64 = null;
+
+function renderConsult(c){
+  const pts = myPatients();
+  if(!pts.length){
+    c.innerHTML = `<div class="card card-lg" style="padding:44px;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:12px;opacity:.5">💬</div>
+      <h3 style="margin-bottom:6px">No patients yet</h3>
+      <p class="muted" style="margin-bottom:18px">Enrol a patient before starting an AI-assisted consultation.</p>
+      <button class="btn" onclick="showPage('patients')">Go to Patient Enrolment</button>
+    </div>`;
+    return;
+  }
+  if(!activePatientId || !pts.find(p=>p.id===activePatientId)) activePatientId = pts[0].id;
+  const active = pts.find(p=>p.id===activePatientId);
+
+  c.innerHTML = `
+    <div class="steps">
+      <div class="step done"><div class="step-num">✓</div><div class="step-info"><div class="ttl">Select Patient</div><div class="sub">${esc(active.name)}</div></div></div>
+      <div class="step-line"></div>
+      <div class="step active"><div class="step-num">2</div><div class="step-info"><div class="ttl">Upload Report</div><div class="sub">ECG · echo · labs</div></div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-num">3</div><div class="step-info"><div class="ttl">Review AI Findings</div><div class="sub">advisory only</div></div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-num">4</div><div class="step-info"><div class="ttl">Document & Export</div><div class="sub">audit trail</div></div></div>
+    </div>
+
+    <div class="consult-layout">
+      <div class="patient-list">
+        <div class="patient-list-head">
+          <h4>Patients (${pts.length})</h4>
+          <input type="text" id="patientSearch" placeholder="Search patients…" oninput="filterPatients(this.value)">
+        </div>
+        <div id="patientItems">
+          ${pts.map(p=>`
+            <div class="patient-item ${p.id===activePatientId?'active':''}" data-name="${esc(p.name.toLowerCase())}" onclick="selectPatient('${p.id}')">
+              <div class="pname">${esc(p.name)}</div>
+              <div class="pmeta">${p.code} · ${p.age}y ${p.sex} · ${esc(p.conditions||'no notes')}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="chat-panel">
+        <div class="chat-head">
+          <div class="who">
+            <div class="avatar-lg">${initials(active.name)}</div>
+            <div>
+              <h4>${esc(active.name)}</h4>
+              <div class="sub">${active.code} · ${active.age}y ${active.sex} · AI-assisted review</div>
+            </div>
+          </div>
+          <span class="pill pill-amber">Advisory only</span>
+        </div>
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-input-area">
+          <div class="file-chip" id="fileChip">
+            <span>📎</span><span id="fileName"></span>
+            <span class="rm" onclick="clearFile()">✕</span>
+          </div>
+          <div class="input-row">
+            <button class="icon-btn" onclick="document.getElementById('reportFile').click()" title="Upload cardiac report image">+</button>
+            <input type="text" id="chatInput" placeholder="Ask about this report or describe symptoms…">
+            <button class="send-btn" id="sendBtn">Send</button>
+          </div>
+          <input type="file" id="reportFile" accept="image/*" style="display:none">
+          <div class="disclaimer-bar">AI output is not a medical diagnosis. Verify all findings clinically.</div>
+        </div>
+      </div>
+    </div>`;
+
+  chatState = { patientId: activePatientId, messages: [] };
+  const past = db.consultations.filter(x => x.patientId===activePatientId && x.doctorId===session.id);
+  if(past.length){
+    const last = past[past.length-1];
+    appendChatBubble('ai', `Previous consultation (${fmtDate(last.createdAt)}):\n${last.summary}`, null);
+  } else {
+    appendChatBubble('ai', `Hello. I'm the CardioAssist AI assistant.\n\nUpload a cardiac report image (ECG, echo, lipid panel) and I'll extract the key findings in structured, plain clinical language. All output is advisory and must be verified by a clinician.`, null);
+  }
+
+  document.getElementById('reportFile').onchange = onFilePick;
+  document.getElementById('sendBtn').onclick = sendChat;
+  document.getElementById('chatInput').addEventListener('keypress', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); sendChat(); }
+  });
+}
+function selectPatient(id){ activePatientId = id; renderConsult(document.getElementById('contentArea')); }
+function filterPatients(q){
+  q = q.toLowerCase();
+  document.querySelectorAll('#patientItems .patient-item').forEach(el=>{
+    el.style.display = el.dataset.name.includes(q) ? '' : 'none';
+  });
+}
+
+function onFilePick(e){
+  const f = e.target.files[0]; if(!f) return;
+  if(!f.type.startsWith('image/')){ toast('Please upload an image (JPG/PNG). Screenshot PDFs first.'); return; }
+  pendingFile = f;
+  const r = new FileReader();
+  r.onload = () => {
+    pendingB64 = r.result.split(',')[1];
+    document.getElementById('fileName').textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+    document.getElementById('fileChip').classList.add('show');
+  };
+  r.readAsDataURL(f);
+}
+function clearFile(){
+  pendingFile = null; pendingB64 = null;
+  const rf = document.getElementById('reportFile'); if(rf) rf.value = '';
+  const fc = document.getElementById('fileChip'); if(fc) fc.classList.remove('show');
+}
+
+function appendChatBubble(role, text, imgB64){
+  const body = document.getElementById('chatBody');
+  const msg = document.createElement('div');
+  msg.className = 'msg ' + role;
+  const av = document.createElement('div'); av.className='av'; av.textContent = role==='user'?'You':'AI';
+  const bub = document.createElement('div'); bub.className='bub'; bub.textContent = text;
+  if(imgB64){
+    const img = document.createElement('img'); img.src = 'data:image/jpeg;base64,' + imgB64;
+    bub.appendChild(img);
+  }
+  msg.appendChild(av); msg.appendChild(bub); body.appendChild(msg);
+  body.scrollTop = body.scrollHeight;
+}
+function appendThinking(){
+  const body = document.getElementById('chatBody');
+  const msg = document.createElement('div');
+  msg.className='msg ai'; msg.id='thinkingMsg';
+  msg.innerHTML = `<div class="av">AI</div><div class="bub"><span class="dots"><span></span><span></span><span></span></span></div>`;
+  body.appendChild(msg); body.scrollTop = body.scrollHeight;
+}
+function removeThinking(){ const el=document.getElementById('thinkingMsg'); if(el) el.remove(); }
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if((!text && !pendingB64) || !chatState.patientId) return;
+  const imgToSend = pendingB64;
+  appendChatBubble('user', text || '[Cardiac report uploaded for analysis]', imgToSend);
+  input.value = ''; clearFile();
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true; sendBtn.textContent='…';
+  appendThinking();
+  try{
+    const reply = await callAI(text, imgToSend);
+    removeThinking();
+    appendChatBubble('ai', reply);
+    db.consultations.push({
+      id: uid('c'), patientId: chatState.patientId, doctorId: session.id,
+      prompt: text || '(image only)', summary: reply.slice(0,400),
+      fullResponse: reply, aiUsed:true, hasImage: !!imgToSend,
+      model: MODEL_NAME, createdAt: now()
+    });
+    persist();
+  }catch(err){
+    removeThinking();
+    let msg = '⚠️ The AI service is currently unreachable.\n\n';
+    msg += 'Please ensure the local AI service is running and the model is available.\n\n';
+    msg += 'Technical: ' + err.message;
+    appendChatBubble('ai', msg);
+  }finally{
+    sendBtn.disabled=false; sendBtn.textContent='Send';
+    document.getElementById('chatInput').focus();
+  }
+}
+
+async function callAI(userText, imageB64){
+  const messages = [
+    { role:'system', content: SYSTEM_PROMPT },
+    { role:'user', content: userText || 'Analyse this cardiac report.',
+      ...(imageB64 ? { images:[imageB64] } : {}) }
+  ];
+  const res = await fetch(AI_URL, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ model: MODEL_NAME, messages, stream:false, options:{ temperature:0.25 } })
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  return data.message.content;
+}
+
+/* =====================================================================
+   GUIDELINES
+   ===================================================================== */
+const GUIDELINES = [
+  {tag:'ESC', tagColor:'pill-blue', title:'2023 ESC Guidelines for Acute Coronary Syndromes', meta:'European Society of Cardiology · ESC 2023', body:'Covers diagnosis, risk stratification and management of ACS including STEMI, NSTEMI and unstable angina. Key concepts: dual antiplatelet therapy, early invasive strategy, and secondary prevention targets.'},
+  {tag:'AHA/ACC', tagColor:'pill-green', title:'2022 AHA/ACC/HFSA Heart Failure Guideline', meta:'American Heart Association · ACC 2022', body:'Defines HF classification by ejection fraction (HFrEF, HFmrEF, HFpEF) with GDMT recommendations and updated four-pillar therapy for HFrEF.'},
+  {tag:'ESC', tagColor:'pill-blue', title:'2021 ESC Guidelines on Cardiovascular Disease Prevention', meta:'European Society of Cardiology · ESC 2021', body:'LDL-C targets, risk assessment via SCORE2/SCORE2-OP, and lifestyle + pharmacological prevention strategies for primary and secondary prevention.'},
+  {tag:'NICE', tagColor:'pill-amber', title:'NICE NG185 — Acute Coronary Syndromes', meta:'National Institute for Health and Care Excellence', body:'Evidence-based recommendations on early risk assessment, antiplatelet therapy, reperfusion strategies and cardiac rehabilitation after ACS.'},
+  {tag:'ESC', tagColor:'pill-blue', title:'2023 ESC Guidelines for Endocarditis', meta:'European Society of Cardiology · ESC 2023', body:'Updated diagnostic criteria, role of imaging (echo, PET-CT), antibiotic prophylaxis and surgical indications for infective endocarditis.'}
+];
+
+function renderGuidelines(c){
+  c.innerHTML = `
+    <div class="info-hero">
+      <div class="tag-line">Reference Library · Plug-in</div>
+      <h2>Clinical Guidelines</h2>
+      <p>Curated, guideline-aware reference content aligned to major cardiology bodies. Use these as contextual anchors when reviewing AI-assisted findings.</p>
+    </div>
+    <div class="panel-head"><h3>Featured Guidelines</h3><p>ESC · AHA/ACC · NICE</p></div>
+    <div class="plug-grid">
+      ${GUIDELINES.map(g=>`
+        <div class="plug-card">
+          <div class="plug-head">
+            <div class="ic">📘</div>
+            <h4>${esc(g.title)}</h4>
+            <p>${esc(g.meta)}</p>
+          </div>
+          <div class="plug-body">
+            <div class="plug-item" style="cursor:default">
+              <span class="tag ${g.tagColor} pill">${g.tag}</span>
+              <div class="body"><div class="ttl" style="font-weight:600;color:var(--muted);font-size:.8rem">${esc(g.body)}</div></div>
+            </div>
+          </div>
+          <div class="plug-foot"><button class="btn btn-sm btn-outline" onclick="toast('Guideline reference opened (demo)')">Open reference →</button></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* =====================================================================
+   STUDIES
+   ===================================================================== */
+const STUDIES = [
+  {tag:'RCT', tagColor:'pill-green', title:'DAPA-HF — Dapagliflozin in Heart Failure', meta:'N Engl J Med · 2019 · n=4,744', body:'SGLT2 inhibitor reduced worsening HF or CV death in HFrEF, establishing SGLT2i as a pillar of HFrEF therapy regardless of diabetes status.'},
+  {tag:'RCT', tagColor:'pill-green', title:'EMPEROR-Reduced — Empagliflozin', meta:'N Engl J Med · 2020 · n=3,730', body:'Empagliflozin reduced composite of CV death or HF hospitalization in HFrEF, corroborating the SGLT2i class benefit.'},
+  {tag:'Meta-analysis', tagColor:'pill-blue', title:'SGLT2 Inhibitors in HF Across EF Spectrum', meta:'Lancet · 2022 · pooled RCTs', body:'Consistent benefit of SGLT2 inhibitors across HFrEF, HFmrEF and HFpEF for reducing HF hospitalization; supports guideline expansion.'},
+  {tag:'Registry', tagColor:'pill-amber', title:'Global ACS Outcomes Registry', meta:'Eur Heart J · 2021 · n>50,000', body:'Highlights disparities in reperfusion times and DAPT adherence across regions; informs quality improvement benchmarks.'},
+  {tag:'RCT', tagColor:'pill-green', title:'ISCHEMIA — Invasive vs Conservative', meta:'N Engl J Med · 2020 · n=5,179', body:'In stable CAD with moderate-severe ischemia, initial invasive strategy did not reduce CV events versus optimal medical therapy alone over median 3.2 years.'}
+];
+
+function renderStudies(c){
+  c.innerHTML = `
+    <div class="info-hero">
+      <div class="tag-line">Evidence Base · Plug-in</div>
+      <h2>Clinical Studies</h2>
+      <p>Key trials and meta-analyses that inform contemporary cardiac practice. AI-assisted summaries can be cross-checked against this evidence base.</p>
+    </div>
+    <div class="panel-head"><h3>Landmark Studies</h3><p>RCTs · Meta-analyses · Registries</p></div>
+    <div class="plug-grid">
+      ${STUDIES.map(s=>`
+        <div class="plug-card">
+          <div class="plug-head">
+            <div class="ic">🔬</div>
+            <h4>${esc(s.title)}</h4>
+            <p>${esc(s.meta)}</p>
+          </div>
+          <div class="plug-body">
+            <div class="plug-item" style="cursor:default">
+              <span class="tag ${s.tagColor} pill">${s.tag}</span>
+              <div class="body"><div class="ttl" style="font-weight:600;color:var(--muted);font-size:.8rem">${esc(s.body)}</div></div>
+            </div>
+          </div>
+          <div class="plug-foot"><button class="btn btn-sm btn-outline" onclick="toast('Study abstract opened (demo)')">View abstract →</button></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/* =====================================================================
+   PRODUCT LEAFLETS — Cardiac Drug Library (SmPC / FDA)
+   ===================================================================== */
+const PRODUCT_LEAFLETS = [
+  {
+    id:'metoprolol-succ', name:'Metoprolol Succinate', brand:'Toprol-XL (representative)',
+    cls:'Beta-blocker (β₁-selective)', clsColor:'pill-blue',
+    source:'FDA Prescribing Information', sourceYear:'2018',
+    indications:'Hypertension, angina pectoris, heart failure (to reduce CV mortality and HF hospitalization).',
+    dosage:'Adults: initial 25–100 mg once daily; titrate at weekly intervals.',
+    contraindications:'Severe bradycardia, 2nd/3rd degree heart block, cardiogenic shock, decompensated heart failure.',
+    warnings:'Do not abruptly discontinue (risk of angina exacerbation/MI). May mask hypoglycemia symptoms. Caution in bronchospastic disease.',
+    interactions:'CYP2D6 inhibitors increase metoprolol levels. Additive bradycardia with digoxin, clonidine, diltiazem, verapamil. NSAIDs may reduce antihypertensive effect.',
+    pregnancy:'May cause fetal harm; use only if clearly needed.'
+  },
+  {
+    id:'rosuvastatin', name:'Rosuvastatin', brand:'Crestor',
+    cls:'Statin (HMG-CoA reductase inhibitor)', clsColor:'pill-green',
+    source:'FDA Prescribing Information', sourceYear:'2024',
+    indications:'Primary hyperlipidemia, mixed dyslipidemia, CV risk reduction in adults without CHD but with elevated hsCRP and ≥1 risk factor.',
+    dosage:'5–40 mg once daily; Asian patients may require lower starting dose.',
+    contraindications:'Acute liver failure, decompensated cirrhosis, hypersensitivity.',
+    warnings:'Myopathy/rhabdomyolysis (dose-dependent). Immune-mediated necrotizing myopathy (rare). Monitor liver enzymes. Increases in HbA1c and fasting glucose.',
+    interactions:'Aluminum/magnesium antacids: give rosuvastatin ≥2 h before. Warfarin: monitor INR. Strong CYP3A4 inhibitors not a major concern (unlike simvastatin).',
+    pregnancy:'May cause fetal harm. Breastfeeding not recommended.'
+  },
+  {
+    id:'aspirin-low', name:'Aspirin (low-dose)', brand:'Generic (81–325 mg)',
+    cls:'Antiplatelet (COX inhibitor)', clsColor:'pill-amber',
+    source:'EFDA Label (BP)', sourceYear:'2023',
+    indications:'Secondary prevention of cardiovascular events; antiplatelet therapy.',
+    dosage:'81–325 mg once daily (cardioprotective dose).',
+    contraindications:'Active peptic ulcer, bleeding disorders, aspirin-exacerbated respiratory disease, pregnancy (3rd trimester).',
+    warnings:'Increased bleeding risk with anticoagulants/NSAIDs. May attenuate ACE inhibitor efficacy (at high doses ≥3 g/day). Ibuprofen may interfere with antiplatelet effect.',
+    interactions:'Anticoagulants (warfarin, heparin): ↑ bleeding risk. NSAIDs (ibuprofen): may reduce cardioprotection. Methotrexate: ↑ toxicity. ACE inhibitors: hypotensive effect may be diminished.',
+    pregnancy:'Avoid in 3rd trimester (premature closure of ductus arteriosus).'
+  },
+  {
+    id:'benazepril', name:'Benazepril', brand:'Lotensin (representative)',
+    cls:'ACE inhibitor', clsColor:'pill-blue',
+    source:'FDA Prescribing Information', sourceYear:'1991 (initial approval)',
+    indications:'Hypertension (adults and pediatric ≥6 years with GFR >30).',
+    dosage:'Adults: 10 mg once daily (5 mg if on diuretic); titrate to 40 mg daily. Renal impairment (GFR <30): start 5 mg daily.',
+    contraindications:'History of ACEI-associated angioedema, hereditary/idiopathic angioedema, concomitant aliskiren in diabetes.',
+    warnings:'Angioedema (discontinue if occurs). Hyperkalemia (monitor K⁺). Renal function monitoring. Hepatic toxicity (rare).',
+    interactions:'Diuretics: excessive hypotension. NSAIDs: ↓ antihypertensive effect, ↑ renal impairment risk. Lithium: toxicity. Potassium supplements: hyperkalemia.',
+    pregnancy:'Contraindicated in pregnancy (fetal toxicity).'
+  },
+  {
+    id:'cilazapril-hctz', name:'Cilazapril + Hydrochlorothiazide', brand:'Vascace Plus (EU)',
+    cls:'ACE inhibitor + thiazide diuretic', clsColor:'pill-red',
+    source:'EMA SmPC (Annex III)', sourceYear:'Harmonised',
+    indications:'Hypertension (combination therapy).',
+    dosage:'One tablet (5 mg cilazapril + 12.5 mg HCTZ) once daily.',
+    contraindications:'Pregnancy (2nd/3rd trimester), severe renal impairment (CrCl <30 mL/min), anuria, history of ACEI angioedema, hypersensitivity to sulfonamides.',
+    warnings:'Severe hypotension at initiation (especially with volume depletion). Monitor renal function and potassium. Angioedema risk. Hepatic cirrhosis requires cautious titration.',
+    interactions:'Potassium-sparing diuretics: hyperkalemia. NSAIDs: ↓ antihypertensive effect. Lithium: toxicity. Gold: nitritoid reactions.',
+    pregnancy:'Contraindicated. Discontinue immediately if pregnancy detected.'
+  },
+  {
+    id:'metoprolol-tartrate', name:'Metoprolol Tartrate', brand:'Lopressor',
+    cls:'Beta-blocker (β₁-selective)', clsColor:'pill-blue',
+    source:'FDA Prescribing Information', sourceYear:'2025',
+    indications:'Myocardial infarction (hemodynamically stable patients) to reduce CV mortality.',
+    dosage:'Start 50 mg PO every 6 h; reduce to 25 mg if intolerant. Max maintenance: 100 mg twice daily.',
+    contraindications:'Severe bradycardia, 2nd/3rd degree heart block, cardiogenic shock, SBP <100 mmHg, decompensated HF, sick sinus syndrome (unless pacemaker).',
+    warnings:'Abrupt cessation may exacerbate angina/MI. May worsen HF during up-titration. Bronchospastic disease: use lowest dose. May mask hypoglycemia/thyrotoxicosis.',
+    interactions:'Catecholamine-depleting drugs: additive effect. CYP2D6 inhibitors: ↑ metoprolol levels. Digoxin/clonidine/diltiazem/verapamil: bradycardia risk.',
+    pregnancy:'Use with caution; may cause fetal bradycardia.'
+  }
+];
+
+function renderLeaflets(c){
+  c.innerHTML = `
+    <div class="info-hero">
+      <div class="tag-line">Medicinal Product Information · SmPC / FDA</div>
+      <h2>Cardiac Drug Leaflets</h2>
+      <p>Summary excerpts from official SmPC / FDA prescribing information for commonly used cardiac molecules. For clinical reference only — always consult the full approved label before prescribing.</p>
+    </div>
+
+    <div class="leaflet-header">
+      <div class="lh-ic">⚠</div>
+      <div>
+        <h4>Clinical safety notice</h4>
+        <p>These summaries are abbreviated for quick reference in the consultation workflow. Dosages, contraindications and interactions must always be verified against the current full approved label (FDA / EMA / local regulator) before prescribing.</p>
+      </div>
+    </div>
+
+    <div class="panel-head">
+      <h3>Cardiac Molecule Library (${PRODUCT_LEAFLETS.length})</h3>
+      <p>Beta-blockers · Statins · Antiplatelets · ACE inhibitors · Diuretic combinations</p>
+    </div>
+
+    <div class="leaflet-grid">
+      ${PRODUCT_LEAFLETS.map(d=>`
+        <div class="leaflet-card">
+          <div class="lc-head">
+            <div class="lc-tags">
+              <span class="pill ${d.clsColor}">${esc(d.cls)}</span>
+              <span class="pill pill-gray">${esc(d.source)} · ${esc(d.sourceYear)}</span>
+            </div>
+            <div class="lc-name">${esc(d.name)}</div>
+            <div class="lc-brand">${esc(d.brand)}</div>
+          </div>
+          <div class="lc-body">
+            <div class="leaflet-sec"><div class="ls-label ind">Indications</div><div class="ls-text">${esc(d.indications)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label dos">Dosage</div><div class="ls-text">${esc(d.dosage)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label contra">Contraindications</div><div class="ls-text">${esc(d.contraindications)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label warn">Warnings & Precautions</div><div class="ls-text">${esc(d.warnings)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label inter">Key Interactions</div><div class="ls-text">${esc(d.interactions)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label preg">Pregnancy</div><div class="ls-text">${esc(d.pregnancy)}</div></div>
+          </div>
+          <div class="lc-foot">
+            <button class="btn btn-sm btn-outline" onclick="toast('Full label reference opened (demo)')">View full label →</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+/* =====================================================================
+   REPORTS
+   ===================================================================== */
+function consTable(list, withPatient){
+  if(!list.length) return `<div class="table-wrap"><div class="empty"><div class="ico">📄</div>No consultations recorded yet.</div></div>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr>
+      ${withPatient?'<th>Patient</th>':''}<th>Date</th><th>Doctor</th>
+      <th>Prompt</th><th>AI Summary</th><th>Model</th>
+    </tr></thead><tbody>
+    ${list.slice().reverse().map(c=>{
+      const p = db.patients.find(x=>x.id===c.patientId);
+      return `<tr>
+        ${withPatient?`<td><b>${esc(p?p.name:'—')}</b><br><span class="muted" style="font-size:.72rem">${p?p.code:''}</span></td>`:''}
+        <td style="white-space:nowrap">${fmtDateTime(c.createdAt)}</td>
+        <td>${esc(docName(c.doctorId))}</td>
+        <td>${esc((c.prompt||'').slice(0,50))}</td>
+        <td>${esc((c.summary||'').slice(0,90))}…</td>
+        <td><span class="pill pill-green">${esc(c.model||'AI')}</span></td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+function renderReports(c){
+  const cons = myConsultations();
+  c.innerHTML = `
+    <div class="guide-panel">
+      <div class="gp-ic">📤</div>
+      <div>
+        <h4>Export & audit</h4>
+        <p>All consultations are timestamped and exportable. Use CSV for analysis and Excel for governance reports. Every AI response is stored in full for auditability.</p>
+      </div>
+    </div>
+    <div class="panel-head">
+      <div>
+        <h3>${session.role==='admin'?'All AI-Assisted Reports':'My AI-Assisted Reports'}</h3>
+        <p>${cons.length} recorded consultation${cons.length===1?'':'s'}</p>
+      </div>
+      <div class="panel-actions">
+        <button class="btn btn-sm btn-outline" onclick="exportReports('csv')">⬇ Export CSV</button>
+        <button class="btn btn-sm btn-outline" onclick="exportReports('xls')">⬇ Export Excel</button>
+      </div>
+    </div>
+    ${consTable(cons, true)}`;
+}
+
+function exportReports(format){
+  const cons = myConsultations();
+  if(!cons.length) return toast('No reports to export.');
+  const rows = [['Consultation ID','Date','Patient ID','Patient Name','Age','Sex','Doctor','Prompt','AI Summary','Full AI Response','Model','Image Attached']];
+  cons.forEach(c=>{
+    const p = db.patients.find(x=>x.id===c.patientId) || {};
+    rows.push([c.id, new Date(c.createdAt).toLocaleString(), p.code||'', p.name||'', p.age||'', p.sex||'',
+      docName(c.doctorId), c.prompt||'', c.summary||'', c.fullResponse||'', c.model||'', c.hasImage?'Yes':'No']);
+  });
+  const stamp = new Date().toISOString().slice(0,10);
+  if(format==='csv'){
+    const csv = rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+    downloadBlob('\uFEFF'+csv, `cardioassist_reports_${stamp}.csv`, 'text/csv;charset=utf-8;');
+    toast('CSV downloaded.');
+  } else {
+    const esc2 = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>
+      <table border="1"><thead><tr>${rows[0].map(h=>`<th style="background:#0b6f7b;color:#fff">${esc2(h)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc2(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      </body></html>`;
+    downloadBlob('\uFEFF'+html, `cardioassist_reports_${stamp}.xls`, 'application/vnd.ms-excel;charset=utf-8;');
+    toast('Excel file downloaded.');
+  }
+}
+function csvCell(v){ const s = String(v ?? ''); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 500);
+}
+
+/* =====================================================================
+   USERS
+   ===================================================================== */
+function renderUsers(c){
+  const docs = db.users.filter(u=>u.role==='doctor');
+  c.innerHTML = `
+    <div class="panel-head"><h3>Registered Doctors (${docs.length})</h3><p>All clinician accounts on the platform</p></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Specialty</th><th>License</th>
+      <th>Hospital</th><th>Patients</th><th>Registered</th></tr></thead>
+      <tbody>
+      ${docs.length ? docs.map(u=>{
+        const pc = db.patients.filter(p=>p.doctorId===u.id).length;
+        return `<tr>
+          <td><b>${esc(u.name)}</b></td>
+          <td>${esc(u.email)}</td>
+          <td>${esc(u.specialty)}</td>
+          <td>${esc(u.license)}</td>
+          <td>${esc(u.hospital)}</td>
+          <td><span class="pill pill-blue">${pc}</span></td>
+          <td>${fmtDate(u.createdAt)}</td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="7" class="empty"><div class="ico">👥</div>No doctors registered.</td></tr>`}
+      </tbody></table></div>`;
+}
+
+/* =====================================================================
+   ADMIN PANEL
+   ===================================================================== */
+function renderAdmin(c){
+  c.innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="num">${db.users.length}</div><div class="lbl">Total Users</div></div>
+      <div class="stat"><div class="num">${db.patients.length}</div><div class="lbl">Total Patients</div></div>
+      <div class="stat"><div class="num">${db.consultations.length}</div><div class="lbl">Total Consultations</div></div>
+      <div class="stat"><div class="num">${db.consultations.filter(x=>x.aiUsed).length}</div><div class="lbl">AI-Assisted</div></div>
+    </div>
+
+    <div class="guide-panel">
+      <div class="gp-ic">⚙</div>
+      <div>
+        <h4>Admin governance</h4>
+        <p>Export complete platform datasets for audit, backup or research. All exports include full AI response text, model identifier and timestamp for traceability.</p>
+      </div>
+    </div>
+
+    <div class="card card-lg" style="margin-bottom:18px">
+      <h3 style="margin-bottom:6px">Download Platform Data</h3>
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:16px;line-height:1.5">Export the entire dataset as CSV or Excel for audit, research or backup.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="exportDataset('consultations','csv')">Consultations · CSV</button>
+        <button class="btn btn-sm" onclick="exportDataset('consultations','xls')">Consultations · Excel</button>
+        <button class="btn btn-sm btn-outline" onclick="exportDataset('patients','csv')">Patients · CSV</button>
+        <button class="btn btn-sm btn-outline" onclick="exportDataset('patients','xls')">Patients · Excel</button>
+        <button class="btn btn-sm btn-outline" onclick="exportDataset('users','csv')">Users · CSV</button>
+        <button class="btn btn-sm btn-outline" onclick="exportDataset('users','xls')">Users · Excel</button>
+      </div>
+    </div>
+
+    <div class="panel-head"><h3>All Consultations</h3></div>
+    ${consTable(db.consultations, true)}
+
+    <div class="panel-head" style="margin-top:26px"><h3>Cardiac Drug Leaflets</h3></div>
+    <div class="leaflet-header">
+      <div class="lh-ic">💊</div>
+      <div>
+        <h4>Product information · SmPC / FDA</h4>
+        <p>${PRODUCT_LEAFLETS.length} cardiac molecules available for reference. See the dedicated <b>Drug Leaflets</b> page for full summaries.</p>
+      </div>
+    </div>
+    <div class="leaflet-grid">
+      ${PRODUCT_LEAFLETS.map(d=>`
+        <div class="leaflet-card">
+          <div class="lc-head">
+            <div class="lc-tags">
+              <span class="pill ${d.clsColor}">${esc(d.cls)}</span>
+              <span class="pill pill-gray">${esc(d.source)}</span>
+            </div>
+            <div class="lc-name">${esc(d.name)}</div>
+            <div class="lc-brand">${esc(d.brand)}</div>
+          </div>
+          <div class="lc-body">
+            <div class="leaflet-sec"><div class="ls-label ind">Indications</div><div class="ls-text">${esc(d.indications)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label dos">Dosage</div><div class="ls-text">${esc(d.dosage)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label contra">Contraindications</div><div class="ls-text">${esc(d.contraindications)}</div></div>
+            <div class="leaflet-sec"><div class="ls-label warn">Warnings</div><div class="ls-text">${esc(d.warnings)}</div></div>
+          </div>
+          <div class="lc-foot">
+            <button class="btn btn-sm btn-outline" onclick="showPage('leaflets')">Open full leaflet →</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="panel-head" style="margin-top:26px"><h3>Danger Zone</h3></div>
+    <div class="card" style="border-color:#fecaca;padding:18px">
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:12px;line-height:1.5">Reset clears all doctors, patients and consultations (the admin account is preserved). This cannot be undone.</p>
+      <button class="btn btn-sm btn-danger" onclick="resetAll()">Reset All Data</button>
+    </div>`;
+}
+
+function exportDataset(kind, format){
+  const data = db[kind] || [];
+  if(!data.length) return toast('Nothing to export in ' + kind + '.');
+  let headers, mapper;
+  if(kind==='consultations'){
+    headers = ['ID','Date','Patient ID','Patient Name','Doctor','Prompt','AI Summary','Full Response','Model','Image Attached'];
+    mapper = c => { const p = db.patients.find(x=>x.id===c.patientId)||{};
+      return [c.id, new Date(c.createdAt).toLocaleString(), p.code||'', p.name||'', docName(c.doctorId),
+        c.prompt||'', c.summary||'', c.fullResponse||'', c.model||'', c.hasImage?'Yes':'No']; };
+  } else if(kind==='patients'){
+    headers = ['ID','Code','Name','Age','Sex','Phone','Blood Group','Conditions','Doctor','Enrolled'];
+    mapper = p => [p.id, p.code, p.name, p.age, p.sex, p.phone||'', p.blood||'', p.conditions||'', docName(p.doctorId), new Date(p.createdAt).toLocaleString()];
+  } else {
+    headers = ['ID','Name','Email','Role','Specialty','License','Hospital','Registered'];
+    mapper = u => [u.id, u.name, u.email, u.role, u.specialty||'', u.license||'', u.hospital||'', new Date(u.createdAt).toLocaleString()];
+  }
+  const rows = [headers, ...data.map(mapper)];
+  const stamp = new Date().toISOString().slice(0,10);
+  if(format==='csv'){
+    const csv = rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+    downloadBlob('\uFEFF'+csv, `cardioassist_${kind}_${stamp}.csv`, 'text/csv;charset=utf-8;');
+  } else {
+    const esc2 = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>
+      <table border="1"><thead><tr>${headers.map(h=>`<th style="background:#0b6f7b;color:#fff">${esc2(h)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc2(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      </body></html>`;
+    downloadBlob('\uFEFF'+html, `cardioassist_${kind}_${stamp}.xls`, 'application/vnd.ms-excel;charset=utf-8;');
+  }
+  toast(kind.charAt(0).toUpperCase()+kind.slice(1) + ' exported as ' + format.toUpperCase());
+}
+
+function resetAll(){
+  if(!confirm('This will permanently delete ALL doctors, patients and consultations. Continue?')) return;
+  const admin = db.users.find(u=>u.role==='admin');
+  db = { users:[admin], patients:[], consultations:[] };
+  persist(); toast('Platform data reset.'); showPage('admin');
+}
+</script>
+</body>
+</html>

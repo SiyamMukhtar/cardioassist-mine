@@ -1,16 +1,52 @@
-# React + Vite
+# CardioAssist — React + Neon + MedGemma-ready backend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## What is included
+- Responsive React clinical workspace based on the supplied CardioAssist HTML, with a 22:9 wide-screen-friendly page layout.
+- Original supplied design preserved at `public/reference.html` for side-by-side reference (this legacy page is not linked to the new database and contains its original demo localStorage features).
+- Doctor sign-up and login (passwords hashed, JWT sessions); patient records, consultations, message history, reports export.
+- Express backend connected to Neon PostgreSQL; tables use `ca_` prefix to avoid touching unrelated tables.
+- MedGemma **only** inference adapter using an OpenAI-compatible serving endpoint. No fallback to NCD Gemma or a non-MedGemma model.
 
-Currently, two official plugins are available:
+## Installation on Windows (from your existing React project folder)
+1. **Back up your existing folder**, and extract this ZIP into `C:\Users\HAMZA\cardioassist`, replacing matching scaffold files. Do not delete `.git`.
+2. Open CMD:
+   ```cmd
+   cd C:\Users\HAMZA\cardioassist
+   copy .env.example .env
+   notepad .env
+   ```
+3. Put your **existing Neon PostgreSQL URL** into `DATABASE_URL` in `.env` and generate a random `JWT_SECRET` of 32+ characters. **Do not put the database URL in React source files.**
+4. Install and start:
+   ```cmd
+   npm install
+   npm run dev:all
+   ```
+5. Open `http://localhost:5173`. Register a doctor. Tables are created automatically if the Neon role has CREATE permission.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### AI integration
+The UI deliberately shows **MedGemma not connected** until you deploy/configure an inference service. A model identifier alone does not load model weights or start a GPU server.
 
-## React Compiler
+- Choose `google/medgemma-27b-text-it` for text-only (needs substantial GPU RAM), or `google/medgemma-1.5-4b-it` for future multimodal work.
+- Accept the model's relevant license terms and provision inference independently.
+- For example, serve MedGemma with vLLM using its OpenAI-compatible endpoint, then set `MEDGEMMA_API_URL=http://localhost:8000/v1` (adjust for where the server actually runs). Set `MEDGEMMA_MODEL` to the actual served model name.
+- The included chat UI is **text-only**. Medical image input, ECG signal handling, and separate validation for each modality are not implemented. The original HTML can visually mention these but that does not constitute actual AI support.
+- Do not send real patient data to an inference provider without evaluating authorization, consent, processing terms, and security controls.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Data migration and existing database
+This package **does not overwrite, delete, or migrate any pre-existing Neon rows**. The supplied HTML stores its demo information in the browser's `localStorage` under `cardioassist_v3`, not in a server database. Export that original data separately before removing the old browser origin. A separate migration/import procedure will be needed to transfer existing users/patients/consultations from an actual source database (no source dump was provided). The Neon connection itself is never run from the browser.
 
-## Expanding the Oxlint configuration
+### Security / clinical limitations
+- Clinical support prototype, **not a validated medical device**. Outputs are advisory and require clinician review.
+- Registration is self-service in this initial prototype; add clinician-license verification, organizational tenancy, stricter RBAC, audit logging, CSRF/cookie hardening, consent, retention policies, backups, and encryption/privacy review before real patient use.
+- Existing demo HTML contains a local test admin login; it is *not* the login for this new application.
+- Database connection and AI credentials belong only in untracked `.env` or a production secrets manager.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Push update
+```cmd
+git add .
+git commit -m "Build CardioAssist React and Neon backend"
+git push origin main
+```
+
+## Check connection
+`http://localhost:4000/api/health` returns JSON including `database` and `modelConfigured`. Avoid treating an unconfigured model as a successful AI deployment.

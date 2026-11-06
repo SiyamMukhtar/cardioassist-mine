@@ -1,122 +1,34 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React,{useEffect,useState} from 'react';
+import {Activity,HeartPulse,LayoutDashboard,Users,MessageSquareText,BookOpen,FlaskConical,Pill,FileText,LogOut,Plus,ShieldCheck,Stethoscope,Send,Menu,Search,ArrowUpRight,Download,AlertTriangle,Database,BrainCircuit,X,CheckCircle2} from 'lucide-react';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+const API='/api';
+async function request(path,options={}){const token=sessionStorage.getItem('ca_token');const r=await fetch(API+path,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{}) ,...options.headers}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`Request failed (${r.status})`);return d;}
+const nav=[['dashboard','Dashboard',LayoutDashboard],['patients','Patients',Users],['consultations','Consultations',MessageSquareText],['guidelines','Guidelines',BookOpen],['studies','Studies',FlaskConical],['leaflets','Drug Leaflets',Pill],['reports','Reports',FileText]];
+function Notice({children,type='info'}){return <div className={'notice '+type}><AlertTriangle size={17}/><span>{children}</span></div>}
+function Button({children,...props}){return <button {...props} className={'btn '+(props.className||'')}>{children}</button>}
+function Field({label,...props}){return <label className="field"><span>{label}</span><input {...props}/></label>}
+function Banner({onAction}){return <div className="banner"><div><small>CLINICAL WORKSPACE · HUMAN-IN-THE-LOOP</small><h1>CardioAssist <span>❤</span></h1><p>Keep patient information, consultations and AI-assisted clinical reasoning in one place.</p><div className="banner-actions"><Button onClick={onAction}><Plus size={17}/> Add patient</Button><a href="/reference.html" target="_blank" rel="noreferrer" className="btn white">Original HTML reference <ArrowUpRight size={15}/></a></div></div><div className="banner-art"><HeartPulse size={125} strokeWidth={1.1}/></div></div>}
+function Auth({onLogin}){const [mode,setMode]=useState('login');const [form,setForm]=useState({name:'',email:'',password:'',specialty:'Cardiology',hospital:'',license:''});const [error,setError]=useState('');const [working,setWorking]=useState(false);async function submit(e){e.preventDefault();setError('');setWorking(true);try{const data=await request('/auth/'+(mode==='login'?'login':'register'),{method:'POST',body:JSON.stringify(form)});sessionStorage.setItem('ca_token',data.token);onLogin(data.user);}catch(e){setError(e.message)}finally{setWorking(false)}}return <div className="auth"><div className="auth-left"><div className="brand big"><div className="logo"><HeartPulse/></div><div><b>CardioAssist</b><small>AI-assisted cardiac platform</small></div></div><div className="auth-copy"><h1>Read cardiac reports <em>faster</em>, with clinical context.</h1><p>A clinician-facing workspace for structured cardiac conversations and patient records.</p><p>✓ Private, doctor-scoped patient workspace</p><p>✓ Neon-backed consultations and reporting</p><p>✓ MedGemma-only inference architecture</p></div><small>For licensed clinicians · AI output is advisory, not diagnostic</small></div><main className="auth-right"><form onSubmit={submit} className="auth-card"><div className="brand mobile-brand"><div className="logo"><HeartPulse/></div><b>CardioAssist</b></div><h2>{mode==='login'?'Welcome back':'Create a clinician account'}</h2><p className="muted">{mode==='login'?'Sign in to access the CardioAssist portal.':'Register to begin working with patient consultations.'}</p><div className="tabs"><button type="button" className={mode==='login'?'active':''} onClick={()=>{setMode('login');setError('')}}>Sign In</button><button type="button" className={mode==='register'?'active':''} onClick={()=>{setMode('register');setError('')}}>Doctor Sign Up</button></div>{error&&<Notice type="error">{error}</Notice>}{mode==='register'&&<Field required label="Full name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Dr. Jane Smith"/>}<Field label="Email" type="email" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="doctor@hospital.com"/><Field label="Password" type="password" required minLength={mode==='login'?1:10} value={form.password} onChange={e=>setForm({...form,password:e.target.value})} placeholder="••••••••••"/>{mode==='register'&&<><label className="field"><span>Specialty</span><select value={form.specialty} onChange={e=>setForm({...form,specialty:e.target.value})}><option>Cardiology</option><option>Internal Medicine</option><option>Emergency Medicine</option><option>General Practice</option></select></label><Field label="Hospital / clinic" value={form.hospital} onChange={e=>setForm({...form,hospital:e.target.value})}/><Field label="License number" value={form.license} onChange={e=>setForm({...form,license:e.target.value})}/></>}<Button disabled={working} className="block">{working?'Please wait...':mode==='login'?'Sign in':'Create account'}</Button><p className="fine">No default admin passwords. Register your own account.</p></form></main></div>}
+export default function App(){const [user,setUser]=useState(null),[page,setPage]=useState('dashboard'),[health,setHealth]=useState(null),[patients,setPatients]=useState([]),[consultations,setConsultations]=useState([]),[stats,setStats]=useState({patients:0,consultations:0,ai:0}),[error,setError]=useState(''),[loading,setLoading]=useState(false),[drawer,setDrawer]=useState(false),[newPatient,setNewPatient]=useState(false),[patientForm,setPatientForm]=useState({name:'',age:'',sex:'Not specified',phone:'',notes:''}),[selected,setSelected]=useState(null),[messages,setMessages]=useState([]),[prompt,setPrompt]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState('');
+useEffect(()=>{request('/health').then(setHealth).catch(()=>setHealth(null));if(sessionStorage.getItem('ca_token'))request('/me').then(setUser).catch(()=>sessionStorage.removeItem('ca_token'));},[]);
+async function reload(){if(!user)return;setLoading(true);try{const [a,b,c]=await Promise.all([request('/patients'),request('/consultations'),request('/stats')]);setPatients(a);setConsultations(b);setStats(c);setError('');}catch(e){setError(e.message)}finally{setLoading(false)}}
+useEffect(()=>{reload()},[user]);
+async function addPatient(e){e.preventDefault();setError('');try{await request('/patients',{method:'POST',body:JSON.stringify(patientForm)});setNewPatient(false);setPatientForm({name:'',age:'',sex:'Not specified',phone:'',notes:''});await reload();setPage('patients')}catch(e){setError(e.message)}}
+async function createConsult(p){try{const c=await request('/consultations',{method:'POST',body:JSON.stringify({patientId:p.id,title:'Cardiac consultation'})});await reload();setSelected({...c,patient_name:p.name});setMessages([]);setPage('consultations')}catch(e){setError(e.message)}}
+async function selectConsult(c){setSelected(c);setPage('consultations');try{setMessages(await request('/consultations/'+c.id+'/messages'))}catch(e){setError(e.message)}}
+async function send(e){e.preventDefault();if(!prompt.trim()||!selected||busy)return;setBusy(true);setError('');try{const response=await request(`/consultations/${selected.id}/message`,{method:'POST',body:JSON.stringify({content:prompt})});setMessages(m=>[...m,{id:'u'+Date.now(),role:'user',content:prompt},{id:'a'+Date.now(),role:'assistant',content:response.answer}]);setPrompt('');await reload();}catch(e){setError(e.message)}finally{setBusy(false)}}
+function navigate(p){setPage(p);setDrawer(false);setError('')}
+function logout(){sessionStorage.removeItem('ca_token');setUser(null);setPatients([]);setConsultations([]);setPage('dashboard')}
+if(!user)return <Auth onLogin={setUser}/>;
+return <div className="app"><aside className={'sidebar '+(drawer?'show':'')}><div className="brand"><div className="logo"><HeartPulse/></div><div><b>CardioAssist</b><small>AI-assisted</small></div></div><div className="nav">{nav.map(([key,label,Icon])=><button key={key} className={page===key?'selected':''} onClick={()=>navigate(key)}><Icon size={18}/>{label}</button>)}</div><div className="profile"><div className="avatar">{user.name?.split(' ').map(s=>s[0]).join('').slice(0,2)}</div><div><b>{user.name}</b><small>{user.specialty||'Clinician'}</small></div></div><button className="signout" onClick={logout}><LogOut size={16}/> Sign out</button></aside>{drawer&&<button className="scrim" onClick={()=>setDrawer(false)} aria-label="Close menu"/>}<section className="main"><header className="topbar"><div className="top-left"><button className="hamburger" onClick={()=>setDrawer(!drawer)}><Menu/></button><div><h2>{nav.find(x=>x[0]===page)?.[1]}</h2><small>CardioAssist / {nav.find(x=>x[0]===page)?.[1]}</small></div></div><div className="head-right"><span className={'status '+(health?.modelConfigured?'ready':'waiting')}><i/> MedGemma {health?.modelConfigured?'configured':'not connected'}</span><div className="head-avatar">{user.name?.slice(0,1)}</div></div></header><div className="content">{error&&<div className="errorbar"><Notice type="error">{error}</Notice><button onClick={()=>setError('')}><X size={17}/></button></div>}{page==='dashboard'&&<><Banner onAction={()=>setNewPatient(true)}/><div className="section-title"><div><h3>Practice overview</h3><p>Live counts from your clinician workspace</p></div><span className="tag">Neon PostgreSQL</span></div><div className="stats">{[["Total patients",stats.patients,Users,'teal'],['Consultations',stats.consultations,MessageSquareText,'blue'],['AI responses',stats.ai,BrainCircuit,'purple'],['My workspace',1,Stethoscope,'green']].map(([t,n,I,c])=><div className="stat-card" key={t}><div className={'stat-icon '+c}><I size={20}/></div><small>WORKSPACE METRIC</small><h2>{n}</h2><p>{t}</p></div>)}</div><div className="two-col"><div className="card"><div className="card-head"><div><h3>Quick actions</h3><p>Start a common workflow</p></div></div>{[[Users,'Add a patient','Create a new patient record',()=>setNewPatient(true)],[MessageSquareText,'New consultation','Start with an existing patient',()=>navigate('patients')],[FileText,'Export reports','Download your consultation data',()=>navigate('reports')]].map(([I,t,d,fn])=><button className="action" key={t} onClick={fn}><span className="action-icon"><I size={19}/></span><span><b>{t}</b><small>{d}</small></span><ArrowUpRight size={16}/></button>)}</div><div className="card"><div className="card-head"><div><h3>Clinical workflow</h3><p>Clinician retains responsibility for all decisions</p></div></div>{[['01','Register patient','Create or select a patient record'],['02','Start consultation','Document the clinical question'],['03','Review MedGemma draft','Only when a real inference service is configured'],['04','Verify and document','Clinician independently checks findings']].map(([n,t,d])=><div className="workflow" key={n}><b>{n}</b><span><strong>{t}</strong><small>{d}</small></span></div>)}<Notice>AI outputs require medical validation and must not replace emergency assessment.</Notice></div></div><div className="card"><div className="card-head"><div><h3>Recent consultations</h3><p>Latest activity across your patients</p></div><Button className="outline" onClick={()=>navigate('consultations')}>View all</Button></div><ConsultTable data={consultations.slice(0,5)} onSelect={selectConsult}/></div></>}
+{page==='patients'&&<><div className="page-heading"><div><h2>Patient records</h2><p>Manage the patients assigned to your account</p></div><Button onClick={()=>setNewPatient(true)}><Plus size={17}/> Add patient</Button></div><div className="card"><div className="search"><Search size={18}/><input placeholder="Search patients by name..." value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="table-scroll"><table><thead><tr><th>Name</th><th>Age</th><th>Sex</th><th>Created</th><th>Action</th></tr></thead><tbody>{patients.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())).map(p=><tr key={p.id}><td><b>{p.name}</b></td><td>{p.age??'—'}</td><td>{p.sex}</td><td>{date(p.created_at)}</td><td><Button className="small outline" onClick={()=>createConsult(p)}>Start consultation</Button></td></tr>)}</tbody></table>{!patients.length&&<div className="empty">No patients yet. Add your first patient to get started.</div>}</div></div></>}
+{page==='consultations'&&<><div className="page-heading"><div><h2>Clinical consultations</h2><p>Patient-specific conversation history</p></div><Button onClick={()=>navigate('patients')}><Plus size={17}/> New consultation</Button></div><div className="consult-layout"><div className="card consult-list"><h3>Consultations</h3>{consultations.map(c=><button key={c.id} className={'consult-item '+(selected?.id===c.id?'current':'')} onClick={()=>selectConsult(c)}><b>{c.patient_name}</b><small>{c.title} · {date(c.created_at)}</small></button>)}{!consultations.length&&<div className="empty">No consultations yet.</div>}</div><div className="card chat"><div className="chat-top"><div><h3>{selected?.patient_name||'Select a consultation'}</h3><small>Clinical decision support · not autonomous diagnosis</small></div><span className={'status '+(health?.modelConfigured?'ready':'waiting')}><i/> {health?.modelConfigured?'MedGemma endpoint set':'AI offline'}</span></div><div className="chat-messages">{!selected?<div className="chat-placeholder"><HeartPulse size={42}/><h3>Clinical support workspace</h3><p>Select a consultation from the left or create one from a patient record.</p></div>:!messages.length?<div className="chat-placeholder"><BrainCircuit size={42}/><h3>Consultation is ready</h3><p>Ask a clinical question once your MedGemma endpoint is configured. Nothing is sent to another AI model.</p></div>:messages.map((m,i)=><div key={m.id||i} className={'bubble '+m.role}><small>{m.role==='assistant'?'MedGemma draft':'Clinician'}</small><p>{m.content}</p></div>)}</div><form className="chat-send" onSubmit={send}><input placeholder={selected?'Enter a clinical question...':'Select a consultation first'} value={prompt} onChange={e=>setPrompt(e.target.value)} disabled={!selected||busy}/><Button disabled={!selected||busy}><Send size={16}/> {busy?'Analyzing...':'Send'}</Button></form><p className="disclaimer">Advisory draft only · Confirm all decisions with a qualified clinician · For emergencies, use established urgent-care pathways.</p></div></div></>}
+{page==='guidelines'&&<Reference heading="Cardiac guidelines" desc="Reference entry points for evidence-based clinical review. Always check the latest published recommendations." entries={[["European Society of Cardiology",'ESC Clinical Practice Guidelines','https://www.escardio.org/Guidelines'],['American College of Cardiology','ACC Clinical Guidelines','https://www.acc.org/guidelines'],['American Heart Association','Professional guidelines and statements','https://professional.heart.org/']]} />}
+{page==='studies'&&<Reference heading="Clinical studies" desc="Research portals for cardiac clinical literature. Results are not automatically curated or interpreted by AI." entries={[["PubMed",'Search biomedical research','https://pubmed.ncbi.nlm.nih.gov/'],['ClinicalTrials.gov','Search registered clinical trials','https://clinicaltrials.gov/'],['Cochrane Library','Evidence reviews and systematic studies','https://www.cochranelibrary.com/']]} />}
+{page==='leaflets'&&<Reference heading="Cardiac drug leaflets" desc="Use official current product information; verify dosing, contraindications and interactions for each patient." entries={[["DailyMed",'Current US drug labeling','https://dailymed.nlm.nih.gov/dailymed/'],['European Medicines Agency','European medicine product information','https://www.ema.europa.eu/en/medicines'],['FDA Drugs','Prescribing information lookup','https://www.accessdata.fda.gov/scripts/cder/daf/']]} />}
+{page==='reports'&&<><div className="page-heading"><div><h2>Reports & export</h2><p>Download your clinician-owned consultation records</p></div></div><div className="card"><div className="report"><div className="stat-icon teal"><FileText/></div><div><h3>Consultation history export</h3><p>Export stored consultations and messages as a JSON record for your own records.</p></div><Button onClick={async()=>{try{const token=sessionStorage.getItem('ca_token');const r=await fetch('/api/reports/export',{headers:{Authorization:'Bearer '+token}});if(!r.ok)throw new Error('Export failed');const blob=await r.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='cardioassist-reports.json';a.click();URL.revokeObjectURL(url)}catch(e){setError(e.message)}}}><Download size={17}/> Export JSON</Button></div></div><Notice>Protect exported files as sensitive clinical data. Access control, privacy compliance, and backups must be reviewed before using real patient information.</Notice></>}
+</div></section>{newPatient&&<div className="modal-bg" onClick={()=>setNewPatient(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div className="modal-head"><h3>Add patient</h3><button onClick={()=>setNewPatient(false)}><X/></button></div><form onSubmit={addPatient}><Field required label="Full name" value={patientForm.name} onChange={e=>setPatientForm({...patientForm,name:e.target.value})}/><Field label="Age" type="number" min="0" max="125" value={patientForm.age} onChange={e=>setPatientForm({...patientForm,age:e.target.value})}/><label className="field"><span>Sex</span><select value={patientForm.sex} onChange={e=>setPatientForm({...patientForm,sex:e.target.value})}><option>Not specified</option><option>Female</option><option>Male</option><option>Other</option></select></label><Field label="Phone (optional)" value={patientForm.phone} onChange={e=>setPatientForm({...patientForm,phone:e.target.value})}/><label className="field"><span>Clinical notes (optional)</span><textarea rows="4" value={patientForm.notes} onChange={e=>setPatientForm({...patientForm,notes:e.target.value})}/></label><Button className="block">Save patient</Button></form></div></div>}</div>
 }
-
-export default App
+function date(d){return d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'}
+function ConsultTable({data,onSelect}){return <div className="table-scroll"><table><thead><tr><th>Patient</th><th>Title</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>{data.map(c=><tr key={c.id}><td><b>{c.patient_name}</b></td><td>{c.title}</td><td><span className="tag green">{c.status}</span></td><td>{date(c.created_at)}</td><td><button className="link" onClick={()=>onSelect(c)}>Open →</button></td></tr>)}</tbody></table>{!data.length&&<div className="empty">No consultations recorded yet.</div>}</div>}
+function Reference({heading,desc,entries}){return <><div className="page-heading"><div><h2>{heading}</h2><p>{desc}</p></div></div><div className="reference-grid">{entries.map(([title,body,url])=><a className="card reference-card" target="_blank" rel="noreferrer" href={url} key={title}><div className="stat-icon teal"><BookOpen/></div><h3>{title}</h3><p>{body}</p><span>Open official resource <ArrowUpRight size={15}/></span></a>)}</div><Notice>Reference links are external. Current clinical guidance should be independently reviewed before use.</Notice></>}
