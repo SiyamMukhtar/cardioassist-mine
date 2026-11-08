@@ -82,3 +82,16 @@ This revision explicitly sends `/api/:path*` to one Node.js Function (`api/index
 A 404 response means the function route is missing / not deployed, not that Neon credentials are wrong. If the health URL still gives 404, verify the new deployment commit and Vercel build output / Functions tab.
 
 The MedGemma endpoint is separate and not configured by this package.
+
+
+## MedGemma GPU integration
+
+See `gpu-server/README.md`. This project does **not** bundle model weights or deploy a GPU automatically. Vercel handles the UI and backend proxy; the genuine MedGemma weights are downloaded and served on a separate authenticated GPU machine. The default model setting for this build is `google/medgemma-1.5-4b-it`.
+
+
+## Clinical library restoration (8 Nov 2026)
+- Guidelines: all five original entries, including ESC Endocarditis.
+- Studies: five original entries with direct PubMed link or PubMed search. The ambiguous registry is explicitly marked as requiring source verification.
+- Drug leaflets: all six original entries, with expandable source excerpts and links to current DailyMed label searches.
+- Original HTML provided by user is copied to `public/reference.html`.
+- No database schema changes. Never commit `.env`.

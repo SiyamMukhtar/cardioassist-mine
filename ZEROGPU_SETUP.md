@@ -1,0 +1,12 @@
+# Free MedGemma in CardioAssist (ZeroGPU, limited demo)
+
+1. Your Hugging Face account must have verified email and be over 30 days old; eligibility is enforced by Hugging Face. Free accounts can host up to 2 ZeroGPU Spaces. If it is a new account, wait until eligible or use Google Colab for temporary notebook testing.
+2. Visit https://huggingface.co/new-space . Set name `cardioassist-medgemma`, SDK **Gradio**, visibility **Public**, hardware **ZeroGPU**. Never use real patient data: this is a public model-hosting demo.
+3. Open Space > Files > Add file > Upload files. Upload the THREE files from `hf-space/` to the ROOT of your Hugging Face Space: `README.md`, `requirements.txt`, and `app.py`.
+4. Go to https://huggingface.co/settings/tokens and create a fine-grained READ token that can read your gated `google/medgemma-1.5-4b-it` files. Do not share token. Add it to Space > Settings > Variables and secrets > New secret named `HF_TOKEN`.
+5. Let Space build, then ask it a fictional question in its App tab. If it errors, inspect Space logs. This script is a starting point; dependencies and ZeroGPU compatibility may require adjustment.
+6. In Vercel > CardioAssist > Settings > Environment Variables > Production, set `HF_SPACE_URL=https://YOUR-HF-USERNAME-cardioassist-medgemma.hf.space` (copy exact 'Embed this Space' URL from the Space). Optionally set `HF_SPACE_TOKEN` to a READ token when access is required; do NOT put it in Vite variables. Set `MEDGEMMA_MODEL=google/medgemma-1.5-4b-it`. Keep DATABASE_URL and JWT_SECRET as they are.
+7. In project folder run: `npm install`, `npm run build`, `git add .`, `git commit -m "Add ZeroGPU MedGemma prototype"`, `git push origin main`. Redeploy on Vercel after saving environment vars.
+8. Check `/api/health` for `modelConfigured:true`. That ONLY proves that HF_SPACE_URL exists, not that the model loaded. Try a single synthetic consultation to verify actual inference.
+
+Important: Free ZeroGPU is quota-limited (about 5 minutes of GPU per day per signed-in free account, and requests from backend may use unauthenticated quota), queues can be long, Space may cold-start, and Vercel may time out before a response arrives. **It cannot guarantee always-online AI consultations**. The Gradio API interface is an experimental integration. Don't use private patient records in a public Space. Google MedGemma requires task-specific evaluation and is not ready for autonomous diagnosis.
