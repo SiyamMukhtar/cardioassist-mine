@@ -1,7 +1,8 @@
 // Single Vercel Function for CardioAssist API routes.
 // The explicit rewrite forwards /api/* here and preserves the path
 // in __ca_path so Express can match its normal /api routes.
-import app from '../server/index.js';
+import app from '../server/index.js'; 
+
 
 export default function handler(req, res) {
   const path = req.query?.__ca_path;
